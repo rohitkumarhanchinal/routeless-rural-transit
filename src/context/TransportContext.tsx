@@ -134,7 +134,7 @@ export const TransportProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     {
       id: 'notif_welcome',
       timestamp: new Date().toISOString(),
-      title: '🚌 Routeless AI Network Online',
+      title: '🚌 Ruralride Network Online',
       message: 'Monitoring rural transit corridors across Belagavi district. Government buses, Panchayat feeders, and alternative fleets synchronized.',
       type: 'info',
       targetRole: 'all',

@@ -21,9 +21,9 @@ export const Navbar: React.FC = () => {
   const go = (id: string) => { setActiveRole(id); setMenuOpen(false); };
 
   return <header className="app-header">
-    <a className="brand" href="#main-content" onClick={(e) => { e.preventDefault(); go(accountRole === 'operator' ? 'overview' : 'student'); }} aria-label="Routeless home">
+    <a className="brand" href="#main-content" onClick={(e) => { e.preventDefault(); go(accountRole === 'operator' ? 'overview' : 'student'); }} aria-label="Ruralride home">
       <span className="brand-mark"><Bus size={20} /></span>
-      <span><strong>ROUTELESS</strong><small>The Last Mile</small></span>
+      <span><strong>Ruralride</strong><small>The Last Mile</small></span>
     </a>
     <nav className={`primary-nav ${menuOpen ? 'is-open' : ''}`} aria-label="Main navigation">
       {nav.map(({ id, label, icon: Icon }) => <button key={id} type="button" onClick={() => go(id)} className={`nav-link ${activeRole === id ? 'active' : ''}`} aria-current={activeRole === id ? 'page' : undefined}>

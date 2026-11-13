@@ -71,7 +71,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, onMobileClose }) =
           <Bus className="w-5 h-5 text-slate-900" />
         </div>
         <div className="min-w-0">
-          <div className="font-black text-lg tracking-tight leading-none">ROUTELESS</div>
+          <div className="font-black text-lg tracking-tight leading-none">Ruralride</div>
           <div className="text-[10px] text-slate-900/50 font-medium mt-0.5">The Last Mile</div>
         </div>
       </div>
@@ -240,7 +240,7 @@ export const MobileTopBar: React.FC<{ onMenuOpen: () => void }> = ({ onMenuOpen 
           <Bus className="w-4 h-4 text-slate-900" />
         </div>
         <span className="font-bold text-[#142B4F] text-sm">
-          {currentItem?.label || 'ROUTELESS'}
+          {currentItem?.label || 'Ruralride'}
         </span>
       </div>
       <div className="relative">

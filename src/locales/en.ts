@@ -1,5 +1,5 @@
 export const en = {
-  app_name: 'ROUTELESS',
+  app_name: 'Ruralride',
   app_tagline: 'The Last Mile: AI Rural Transit Network',
 
   // Navigation Sections
@@ -95,7 +95,7 @@ export const en = {
   methodology_title: 'Transparent Demand Forecasting Methodology',
 
   // Assistant
-  ai_assistant_title: 'Routeless AI Mobility Assistant',
+  ai_assistant_title: 'Ruralride AI Mobility Assistant',
   ai_assistant_desc: 'Instant decision-support for rural students and transport controllers.',
   ask_assistant_placeholder: 'Ask about routes, breakdowns, waitlists, or fleet capacity...',
 };

@@ -1,5 +1,5 @@
 export const kn = {
-  app_name: 'ರೂಟ್‌ಲೆಸ್',
+  app_name: 'Ruralride',
   app_tagline: 'ಕೊನೆಯ ಮೈಲಿ: ಗ್ರಾಮೀಣ ಸಾರಿಗೆ ಜಾಲ',
 
   // Navigation Sections
@@ -95,7 +95,7 @@ export const kn = {
   methodology_title: 'ಸ್ಪಷ್ಟ ಅಲ್ಗಾರಿದಮಿಕ್ ಮುನ್ಸೂಚನೆ ವಿಧಾನ',
 
   // Assistant
-  ai_assistant_title: 'ರೂಟ್‌ಲೆಸ್ ಎಐ ಸಾರಿಗೆ ಸಹಾಯಕ',
+  ai_assistant_title: 'Ruralride ಎಐ ಸಾರಿಗೆ ಸಹಾಯಕ',
   ai_assistant_desc: 'ಗ್ರಾಮೀಣ ವಿದ್ಯಾರ್ಥಿಗಳಿಗೆ ಮತ್ತು ನಿಯಂತ್ರಕರಿಗೆ ತಕ್ಷಣದ ನಿರ್ಧಾರ ಬೆಂಬಲ.',
   ask_assistant_placeholder: 'ಮಾರ್ಗಗಳು, ಬಸ್ ಸ್ಥಿತಿ, ಕಾಯುವ ಪಟ್ಟಿಯ ಬಗ್ಗೆ ಕೇಳಿ...',
 };

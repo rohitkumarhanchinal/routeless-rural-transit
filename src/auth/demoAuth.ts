@@ -12,8 +12,8 @@ export type AuthenticatedDemoAccount = Omit<DemoAccount, 'password'>;
 
 // Demo-only credentials. Replace this local adapter with a server auth provider before production use.
 export const DEMO_ACCOUNTS: readonly DemoAccount[] = [
-  { id: 'demo-student', email: 'student@routeless.demo', password: 'student123', role: 'student', displayName: 'Student demo' },
-  { id: 'demo-operator', email: 'operator@routeless.demo', password: 'operator123', role: 'operator', displayName: 'Operator demo' },
+  { id: 'demo-student', email: 'student@ruralride.demo', password: 'student123', role: 'student', displayName: 'Student demo' },
+  { id: 'demo-operator', email: 'operator@ruralride.demo', password: 'operator123', role: 'operator', displayName: 'Operator demo' },
 ];
 
 export const authenticateDemo = (email: string, password: string): AuthenticatedDemoAccount | null => {

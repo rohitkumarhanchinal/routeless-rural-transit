@@ -33,7 +33,7 @@ export const MobilityAssistant: React.FC = () => {
     {
       id: 'welcome_1',
       sender: 'assistant',
-      text: `Hello! I am your **Routeless AI Mobility Assistant**.\n\nI monitor the live transit state across Belagavi district. You are currently viewing as **${activeStudent.name}** (from ${villages.find((v) => v.id === activeStudent.villageId)?.name} ➔ ${institutions.find((i) => i.id === activeStudent.institutionId)?.name}).\n\nHow can I help you today?`,
+      text: `Hello! I am your **Ruralride AI Mobility Assistant**.\n\nI monitor the live transit state across Belagavi district. You are currently viewing as **${activeStudent.name}** (from ${villages.find((v) => v.id === activeStudent.villageId)?.name} ➔ ${institutions.find((i) => i.id === activeStudent.institutionId)?.name}).\n\nHow can I help you today?`,
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       chips: [
         'Which bus can take me to my college?',

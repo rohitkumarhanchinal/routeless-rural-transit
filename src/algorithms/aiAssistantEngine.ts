@@ -104,7 +104,7 @@ export class AIAssistantEngine {
       return {
         id: `msg_${Date.now()}`,
         sender: 'assistant',
-        text: `**Routeless Automated Disruption Protocol:**\n1. If your bus suffers a mechanical failure or breakdown, the driver or operator marks it in the Command Center.\n2. Our **AI Reallocation Engine** instantly executes in real-time.\n3. Students with Board/Semester exams and remote girl students receive prioritized reallocation to other passing government buses or verified auxiliary fleets (**${context.alternatives.map((a) => a.name).join(', ')}**).\n4. You will receive an instantaneous SMS and dashboard update with your new vehicle number and pickup time!`,
+        text: `**Ruralride Automated Disruption Protocol:**\n1. If your bus suffers a mechanical failure or breakdown, the driver or operator marks it in the Command Center.\n2. Our **AI Reallocation Engine** instantly executes in real-time.\n3. Students with Board/Semester exams and remote girl students receive prioritized reallocation to other passing government buses or verified auxiliary fleets (**${context.alternatives.map((a) => a.name).join(', ')}**).\n4. You will receive an instantaneous dashboard update with your new vehicle number and pickup time!`,
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         chips: ['Simulate Bus Breakdown now', 'View emergency contacts', 'Check spare capacity'],
         dataPill: { label: 'Protection', value: '100% Zero-Abandonment Rule', tone: 'success' },
@@ -227,7 +227,7 @@ export class AIAssistantEngine {
     return {
       id: `msg_${Date.now()}`,
       sender: 'assistant',
-      text: `I understand you are asking about: *"${query}"*.\n\nAs your Routeless Mobility Assistant, I can help you with:\n1. Finding compatible buses for **${village?.name} ➔ ${institution?.name}**.\n2. Checking disruption detours and Dijkstra shortest bypass paths.\n3. Understanding why a seat was allocated or waitlisted.\n4. Identifying fleet capacity bottlenecks and deploying auxiliary rural vehicles.\n\nHow would you like me to assist you?`,
+      text: `I understand you are asking about: *"${query}"*.\n\nAs your Ruralride Mobility Assistant, I can help you with:\n1. Finding compatible buses for **${village?.name} ➔ ${institution?.name}**.\n2. Checking disruption detours and shortest bypass paths.\n3. Understanding why a seat was allocated or waitlisted.\n4. Identifying fleet capacity bottlenecks and deploying auxiliary rural vehicles.\n\nHow would you like me to assist you?`,
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       chips: [
         'Which bus can take me to my college?',

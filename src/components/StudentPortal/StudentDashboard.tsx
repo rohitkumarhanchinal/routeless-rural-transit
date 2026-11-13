@@ -176,7 +176,7 @@ export const StudentDashboard: React.FC = () => {
           <AlertTriangle className="w-5 h-5 text-rose-400 flex-shrink-0 mt-0.5 animate-bounce" />
           <div className="flex-1 text-sm">
             <span className="font-bold text-rose-300">Route Disruption Alert: </span>
-            Your primary scheduled transit service has reported a breakdown or route blockage. The Routeless AI system has initiated emergency reallocation protocols.
+            Your primary scheduled transit service has reported a breakdown or route blockage. Ruralride has started emergency reallocation.
             <button
               onClick={() => setActiveRole('simulator')}
               className="ml-3 underline font-semibold text-rose-300 hover:text-slate-900"
@@ -343,7 +343,7 @@ export const StudentDashboard: React.FC = () => {
                 className="text-xs bg-slate-700 hover:bg-slate-600 px-3 py-1.5 rounded-lg text-slate-700 font-medium flex items-center"
               >
                 <HelpCircle className="w-3.5 h-3.5 mr-1.5 text-cyan-400" />
-                Ask Routeless AI
+                Ask Ruralride AI
               </button>
             </div>
           </div>
@@ -553,7 +553,7 @@ export const StudentDashboard: React.FC = () => {
             </div>
 
             <p className="text-xs text-slate-500 mb-3">
-              When regular state buses are full or delayed, Routeless partners with verified Panchayat feeders and student shuttles.
+              When regular state buses are full or delayed, Ruralride can connect you with verified Panchayat feeders and student shuttles.
             </p>
 
             <div className="space-y-3">
