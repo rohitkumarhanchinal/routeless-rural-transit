@@ -16,8 +16,24 @@ import {
   TrendingUp,
   RefreshCw,
   Send,
+  Pencil,
+  Check,
+  X,
 } from 'lucide-react';
 import { StudentPriorityTier } from '../../types';
+
+const toTimeInputValue = (value: string) => {
+  const match = value.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+  if (!match) return '09:00';
+  let hour = Number(match[1]) % 12;
+  if (match[3].toUpperCase() === 'PM') hour += 12;
+  return `${String(hour).padStart(2, '0')}:${match[2]}`;
+};
+
+const toDisplayTimeValue = (value: string) => {
+  const [hour, minute] = value.split(':').map(Number);
+  return `${String(hour % 12 || 12).padStart(2, '0')}:${String(minute).padStart(2, '0')} ${hour >= 12 ? 'PM' : 'AM'}`;
+};
 
 export const StudentDashboard: React.FC = () => {
   const {
@@ -45,6 +61,8 @@ export const StudentDashboard: React.FC = () => {
   const [hasExam, setHasExam] = useState<boolean>(activeStudent.hasBoardExamToday);
   const [priorityTier, setPriorityTier] = useState<StudentPriorityTier>(activeStudent.priorityTier);
   const [requestSubmittedSuccess, setRequestSubmittedSuccess] = useState<string | null>(null);
+  const [profileEditorOpen, setProfileEditorOpen] = useState(false);
+  const [examStartTime, setExamStartTime] = useState(toTimeInputValue(activeStudent.examinationStartTime || '09:00 AM'));
 
   const studentVillage = villages.find((v) => v.id === activeStudent.villageId);
   const studentInstitution = institutions.find((i) => i.id === activeStudent.institutionId);
@@ -74,8 +92,9 @@ export const StudentDashboard: React.FC = () => {
       departureTime,
       arrivalTime,
       travelDate,
-      priorityTier,
+      priorityTier: hasExam ? 'high_exam' : priorityTier === 'high_exam' ? (activeStudent.gender === 'female' ? 'medical_girl_safety' : 'standard') : priorityTier,
       hasBoardExamToday: hasExam,
+      examinationStartTime: hasExam ? toDisplayTimeValue(examStartTime) : undefined,
     });
 
     setRequestSubmittedSuccess(
@@ -89,6 +108,7 @@ export const StudentDashboard: React.FC = () => {
     <div className="space-y-6 max-w-7xl mx-auto px-4 py-6">
       {/* Current signed-in student profile */}
       <div className="bg-slate-50/90 border border-slate-200/80 rounded-2xl p-4 sm:p-5 shadow-lg backdrop-blur">
+        <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-4">
           <div className="flex items-center space-x-3.5">
             <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-brand-600 to-indigo-600 flex items-center justify-center text-slate-900 font-bold text-lg shadow-md">
@@ -519,6 +539,17 @@ export const StudentDashboard: React.FC = () => {
             </div>
           </div>
         </div>
+        <button type="button" onClick={() => setProfileEditorOpen((open) => !open)} aria-expanded={profileEditorOpen} aria-controls="student-profile-editor" className="inline-flex min-h-[42px] shrink-0 items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50">
+          <Pencil className="h-4 w-4" aria-hidden="true" /> {profileEditorOpen ? 'Close edit' : 'Edit profile'}
+        </button>
+        </div>
+        {profileEditorOpen && <form id="student-profile-editor" onSubmit={(event) => { handleSubmitRequest(event); setProfileEditorOpen(false); }} className="mt-5 grid gap-4 border-t border-slate-200 pt-5 sm:grid-cols-2">
+          <div><label htmlFor="profile-village" className="mb-1 block text-sm font-semibold text-slate-700">Pickup village</label><select id="profile-village" value={selectedVillageId} onChange={(event) => setSelectedVillageId(event.target.value)} className="min-h-[44px] w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-800">{villages.map((village) => <option key={village.id} value={village.id}>{language === 'kn' ? village.kannadaName : village.name}</option>)}</select></div>
+          <div><label htmlFor="profile-institution" className="mb-1 block text-sm font-semibold text-slate-700">Institution</label><select id="profile-institution" value={selectedInstitutionId} onChange={(event) => setSelectedInstitutionId(event.target.value)} className="min-h-[44px] w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-800">{institutions.map((institution) => <option key={institution.id} value={institution.id}>{language === 'kn' ? institution.kannadaName : institution.name}</option>)}</select></div>
+          <label htmlFor="profile-exam" className="flex min-h-[48px] cursor-pointer items-center gap-3 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 sm:col-span-2"><input id="profile-exam" type="checkbox" checked={hasExam} onChange={(event) => setHasExam(event.target.checked)} className="h-5 w-5 accent-blue-600"/>I have an exam today</label>
+          {hasExam && <div><label htmlFor="profile-exam-time" className="mb-1 block text-sm font-semibold text-slate-700">Exam start time</label><input id="profile-exam-time" type="time" value={examStartTime} onChange={(event) => setExamStartTime(event.target.value)} className="min-h-[44px] w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-800"/></div>}
+          <div className="flex flex-wrap items-center justify-end gap-2 sm:col-span-2"><button type="button" onClick={() => { setSelectedVillageId(activeStudent.villageId); setSelectedInstitutionId(activeStudent.institutionId); setHasExam(activeStudent.hasBoardExamToday); setExamStartTime(toTimeInputValue(activeStudent.examinationStartTime || '09:00 AM')); setProfileEditorOpen(false); }} className="inline-flex min-h-[42px] items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-700"><X className="h-4 w-4"/>Cancel</button><button type="submit" className="inline-flex min-h-[42px] items-center gap-2 rounded-lg bg-blue-700 px-4 text-sm font-semibold text-white hover:bg-blue-800"><Check className="h-4 w-4"/>Save profile and update transport</button></div>
+        </form>}
       </div>
     </div>
   );
