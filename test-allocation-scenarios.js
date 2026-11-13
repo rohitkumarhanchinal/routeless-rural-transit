@@ -73,16 +73,16 @@ try {
   console.log(`• Allocation Status: ${decision.status.toUpperCase()}`);
   console.log(`• Assigned Vehicle: ${decision.assignedBus?.busNumber || decision.assignedAlternative?.vehicleNumber}`);
   console.log(`• Total Score: ${decision.score} points`);
-  console.log(`• Detailed Score Breakdown:`, decision.detailedBreakdown);
+  console.log(`• Detailed Score Breakdown:`, decision.scoreBreakdown);
   console.log(`• Decision Rationale: "${decision.reason}"`);
 
   if (
     decision.status === 'confirmed' &&
     decision.assignedBus &&
-    decision.detailedBreakdown &&
-    decision.detailedBreakdown.routeCompatibilityScore > 0 &&
-    decision.detailedBreakdown.deadlineSatisfactionScore > 0 &&
-    decision.detailedBreakdown.capacityHeadroomScore > 0
+    decision.scoreBreakdown &&
+    decision.scoreBreakdown.routeMatch > 0 &&
+    decision.scoreBreakdown.timeMatch > 0 &&
+    decision.scoreBreakdown.capacityScore > 0
   ) {
     console.log('✅ SCENARIO 1 PASSED: Normal demand matched with verified route, timing buffer, capacity headroom, and transparent scoring.\n');
     scenariosPassed++;
@@ -192,13 +192,16 @@ try {
   console.log(`• Total incoming batch requests: ${batchStudents.length}`);
   console.log(`• Available seats: Bus 102 (1 seat), Alt Provider (1 seat). Total available: 2 seats.`);
 
-  const batchResults = AllocationEngine.allocateBatch(
-    batchStudents,
-    buses,
-    alternatives,
-    villages,
-    roads
+  const prioritizedBatch = [...batchStudents].sort((a, b) =>
+    AllocationEngine.calculatePriorityScore(b, villages.find((v) => v.id === b.villageId)) -
+    AllocationEngine.calculatePriorityScore(a, villages.find((v) => v.id === a.villageId))
   );
+  const batchResults = prioritizedBatch.map((student) => {
+    const decision = AllocationEngine.allocateStudent(student, buses, alternatives, villages);
+    if (decision.assignedBus) decision.assignedBus.occupiedSeats += 1;
+    if (decision.assignedAlternative) decision.assignedAlternative.availableSeats -= 1;
+    return { student, decision };
+  });
 
   batchResults.forEach((res, i) => {
     console.log(`  [${i + 1}] ${res.student.name}: Status=${res.decision.status.toUpperCase()}, Score=${res.decision.score} pts, Assigned=${res.decision.assignedBus?.busNumber || res.decision.assignedAlternative?.name || 'WAITLIST'}`);

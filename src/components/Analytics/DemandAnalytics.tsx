@@ -47,16 +47,16 @@ export const DemandAnalytics: React.FC = () => {
       {/* Title */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-black text-white flex items-center">
+          <h1 className="text-2xl font-black text-slate-900 flex items-center">
             <BarChart3 className="w-6 h-6 mr-2.5 text-brand-400" />
             {t.analytics_title}
           </h1>
-          <p className="text-xs text-slate-400 mt-1">
+          <p className="text-xs text-slate-500 mt-1">
             Real-time student ridership demand, seat inventory utilization, and algorithmic demand forecasting.
           </p>
         </div>
 
-        <div className="flex items-center space-x-2 text-xs text-slate-400 bg-slate-800 px-3 py-1.5 rounded-xl border border-slate-700">
+        <div className="flex items-center space-x-2 text-xs text-slate-500 bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-200">
           <Clock className="w-4 h-4 text-brand-400" />
           <span>Active Window: Morning College Commute (07:00 - 09:30 AM)</span>
         </div>
@@ -64,29 +64,29 @@ export const DemandAnalytics: React.FC = () => {
 
       {/* Primary KPI Metrics */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-slate-800/90 border border-slate-700/80 rounded-2xl p-4 shadow-lg">
-          <div className="flex items-center justify-between text-slate-400 text-xs font-medium">
+        <div className="bg-slate-50/90 border border-slate-200/80 rounded-2xl p-4 shadow-lg">
+          <div className="flex items-center justify-between text-slate-500 text-xs font-medium">
             <span>Total Logged Requests</span>
             <Users className="w-4 h-4 text-brand-400" />
           </div>
-          <p className="text-2xl font-black text-white mt-2">{metrics.totalRequests}</p>
+          <p className="text-2xl font-black text-slate-900 mt-2">{metrics.totalRequests}</p>
           <div className="mt-1 flex items-center text-[11px] text-emerald-400">
             <ArrowUpRight className="w-3.5 h-3.5 mr-0.5" />
             <span>{metrics.allocationRatePct}% Allocation Rate</span>
           </div>
         </div>
 
-        <div className="bg-slate-800/90 border border-slate-700/80 rounded-2xl p-4 shadow-lg">
-          <div className="flex items-center justify-between text-slate-400 text-xs font-medium">
+        <div className="bg-slate-50/90 border border-slate-200/80 rounded-2xl p-4 shadow-lg">
+          <div className="flex items-center justify-between text-slate-500 text-xs font-medium">
             <span>Allocated Students</span>
             <CheckCircle className="w-4 h-4 text-emerald-400" />
           </div>
           <p className="text-2xl font-black text-emerald-400 mt-2">{metrics.allocated}</p>
-          <span className="text-[11px] text-slate-400">Confirmed seats in buses & feeders</span>
+          <span className="text-[11px] text-slate-500">Confirmed seats in buses & feeders</span>
         </div>
 
-        <div className="bg-slate-800/90 border border-slate-700/80 rounded-2xl p-4 shadow-lg">
-          <div className="flex items-center justify-between text-slate-400 text-xs font-medium">
+        <div className="bg-slate-50/90 border border-slate-200/80 rounded-2xl p-4 shadow-lg">
+          <div className="flex items-center justify-between text-slate-500 text-xs font-medium">
             <span>Unallocated (Waitlist)</span>
             <AlertCircle className="w-4 h-4 text-amber-400" />
           </div>
@@ -94,13 +94,13 @@ export const DemandAnalytics: React.FC = () => {
           <span className="text-[11px] text-amber-400/80">Pending auxiliary vehicle dispatch</span>
         </div>
 
-        <div className="bg-slate-800/90 border border-slate-700/80 rounded-2xl p-4 shadow-lg">
-          <div className="flex items-center justify-between text-slate-400 text-xs font-medium">
+        <div className="bg-slate-50/90 border border-slate-200/80 rounded-2xl p-4 shadow-lg">
+          <div className="flex items-center justify-between text-slate-500 text-xs font-medium">
             <span>Fleet Seat Utilization</span>
             <Bus className="w-4 h-4 text-cyan-400" />
           </div>
-          <p className="text-2xl font-black text-white mt-2">{metrics.fleetUtilizationPct}%</p>
-          <span className="text-[11px] text-slate-400">
+          <p className="text-2xl font-black text-slate-900 mt-2">{metrics.fleetUtilizationPct}%</p>
+          <span className="text-[11px] text-slate-500">
             {metrics.totalOccupiedSeats} / {metrics.totalFleetCapacity} active seats booked
           </span>
         </div>
@@ -112,7 +112,7 @@ export const DemandAnalytics: React.FC = () => {
           <HelpCircle className="w-4 h-4" />
           <span>{t.methodology_title}</span>
         </div>
-        <p className="leading-relaxed text-slate-300">
+        <p className="leading-relaxed text-slate-600">
           {DemandForecaster.METHODOLOGY_EXPLANATION}
         </p>
       </div>
@@ -120,13 +120,13 @@ export const DemandAnalytics: React.FC = () => {
       {/* Charts Row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Chart 1: Actual vs Algorithmic Projected Demand by Route */}
-        <div className="bg-slate-800/90 border border-slate-700/80 rounded-2xl p-5 shadow-xl">
+        <div className="bg-slate-50/90 border border-slate-200/80 rounded-2xl p-5 shadow-xl">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h2 className="text-sm font-bold text-white">
+              <h2 className="text-sm font-bold text-slate-900">
                 Corridor Demand: Actual vs Projected
               </h2>
-              <p className="text-xs text-slate-400">Comparing live student requests against tomorrow's projection</p>
+              <p className="text-xs text-slate-500">Comparing live student requests against tomorrow's projection</p>
             </div>
           </div>
 
@@ -153,13 +153,13 @@ export const DemandAnalytics: React.FC = () => {
         </div>
 
         {/* Chart 2: Hourly Demand vs Available Capacity Timeline */}
-        <div className="bg-slate-800/90 border border-slate-700/80 rounded-2xl p-5 shadow-xl">
+        <div className="bg-slate-50/90 border border-slate-200/80 rounded-2xl p-5 shadow-xl">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h2 className="text-sm font-bold text-white">
+              <h2 className="text-sm font-bold text-slate-900">
                 Time-Slot Load: Ridership vs Total Capacity
               </h2>
-              <p className="text-xs text-slate-400">Identifying morning peak commuter congestion windows</p>
+              <p className="text-xs text-slate-500">Identifying morning peak commuter congestion windows</p>
             </div>
           </div>
 
@@ -188,14 +188,14 @@ export const DemandAnalytics: React.FC = () => {
       </div>
 
       {/* Corridor Congestion Stress Index Table */}
-      <div className="bg-slate-800/90 border border-slate-700/80 rounded-2xl p-5 shadow-xl">
-        <h2 className="text-sm font-bold text-white mb-3">
+      <div className="bg-slate-50/90 border border-slate-200/80 rounded-2xl p-5 shadow-xl">
+        <h2 className="text-sm font-bold text-slate-900 mb-3">
           Rural Corridor Congestion & Stress Index
         </h2>
 
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs text-slate-300">
-            <thead className="bg-slate-900 text-slate-400 uppercase text-[10px] font-bold">
+          <table className="w-full text-left text-xs text-slate-600">
+            <thead className="bg-white text-slate-500 uppercase text-[10px] font-bold">
               <tr>
                 <th className="p-3">Corridor</th>
                 <th className="p-3">Observed Demand</th>
@@ -208,11 +208,11 @@ export const DemandAnalytics: React.FC = () => {
             <tbody className="divide-y divide-slate-700/60">
               {routeDemand.map((item) => (
                 <tr key={item.routeId} className="hover:bg-slate-750 transition">
-                  <td className="p-3 font-semibold text-white">{item.routeName}</td>
+                  <td className="p-3 font-semibold text-slate-900">{item.routeName}</td>
                   <td className="p-3">{item.currentActualDemand} students</td>
                   <td className="p-3 font-medium text-purple-300">{item.projectedTomorrowDemand} students</td>
                   <td className="p-3 font-medium text-emerald-400">{item.availableCapacity} seats</td>
-                  <td className="p-3 font-bold text-slate-200">{item.utilizationRate}%</td>
+                  <td className="p-3 font-bold text-slate-700">{item.utilizationRate}%</td>
                   <td className="p-3">
                     {item.stressLevel === 'critical_overload' && (
                       <span className="px-2.5 py-1 rounded-full bg-rose-500/20 text-rose-300 font-bold text-[10px] border border-rose-500/30">
@@ -230,7 +230,7 @@ export const DemandAnalytics: React.FC = () => {
                       </span>
                     )}
                     {item.stressLevel === 'low' && (
-                      <span className="px-2.5 py-1 rounded-full bg-slate-700 text-slate-300 font-bold text-[10px]">
+                      <span className="px-2.5 py-1 rounded-full bg-slate-700 text-slate-600 font-bold text-[10px]">
                         LOW DEMAND (&lt;50%)
                       </span>
                     )}

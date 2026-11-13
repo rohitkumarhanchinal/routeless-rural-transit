@@ -37,6 +37,20 @@ ROUTELESS bridges this gap by unifying **Students**, **State Transport Operators
 - **Road Closure & Repair Logging**: Live toggles on rural road segments that force network graph re-computation.
 - **Auxiliary Bus Deployment**: On-demand dispatch of auxiliary relief vehicles (absorbing waitlisted students in priority order).
 
+#### Exam Day Emergency Command Center
+
+The operator dashboard includes a combined emergency demonstration that applies two government bus failures, a 40% demand increase, and a simulated flood closure of the Harugeri–Mugalkhod road in one run.
+
+- Demand is based on the current student records: `ceil(current students × 1.40)`. The additional request records are marked **Simulated** in the operator request queue and are added only once per run.
+- The `EmergencyOptimizer` uses the current road graph and existing Dijkstra router to exclude disrupted edges. It checks service compatibility, vehicle status, seat availability, estimated arrival, and each examination start time before assigning a seat.
+- Examination urgency has three explainable categories: **Critical** (exam within 60 minutes or 30 minutes or less of estimated arrival buffer), **High** (exam within the two-hour window), and **Normal**. Non-examination students remain in the queue and can use remaining eligible seats.
+- This is a deterministic priority-aware greedy allocation pass, not a global optimizer; the report exposes unmet capacity and timing constraints rather than promising every student will arrive on time.
+- Vehicle capacities are never exceeded. Students without an open, compatible, on-time option remain waitlisted or at risk, and the report states the constraint.
+- Students see only their own emergency status, previous/new vehicle, pickup point, estimated arrival, and flood-safe route estimate in the Student Portal.
+- All times and route calculations are local demonstration estimates from the included demo data; the feature does not use live traffic or external services. Reset uses the existing demo-data reset action.
+
+Run the emergency and existing allocation/transport regression checks with `npm run test:emergency`.
+
 ### 3. Module C: Intelligent Allocation Engine (`src/algorithms/allocationEngine.ts`)
 - Multi-factor algorithmic evaluation function:
   $$\text{Score} = \text{RouteMatch} (35) + \text{TimeBufferMatch} (25) + \text{CapacityScore} (15) + \text{PriorityBonus} (40)$$
@@ -91,6 +105,7 @@ routeless/
 │   │   ├── allocationEngine.ts    # Multi-factor student seat allocation
 │   │   ├── graphRouter.ts         # Dijkstra shortest path & bypass calculation
 │   │   ├── disruptionEngine.ts    # Cascading breakdown & surge reallocation
+│   │   ├── emergencyOptimizer.ts  # Combined crisis demand, priority & route-aware allocation
 │   │   ├── demandForecaster.ts    # Weighted moving average ridership projection
 │   │   └── aiAssistantEngine.ts   # Context-aware natural language decision support
 │   ├── components/
@@ -98,6 +113,7 @@ routeless/
 │   │   ├── LandingPage/           # Executive product overview & quick launchers
 │   │   ├── StudentPortal/         # Boarding pass, seat availability, ride request
 │   │   ├── OperatorDashboard/     # Fleet management, bus status, auxiliary dispatch
+│   │   │   └── EmergencyCommandCenter.tsx # Combined exam-day crisis status and response report
 │   │   ├── RouteVisualizer/       # Interactive schematic SVG map & detour delta
 │   │   ├── DisruptionSimulator/   # Breakdown & closure simulator, impact reports
 │   │   ├── Analytics/             # Recharts corridor demand & capacity load charts

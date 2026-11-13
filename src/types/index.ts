@@ -104,12 +104,68 @@ export interface Student {
   requiredArrivalTime: string;
   priorityTier: StudentPriorityTier;
   hasBoardExamToday: boolean;
+  examinationStatus?: 'scheduled' | 'none';
+  examinationStartTime?: string;
+  demandSource?: 'registered' | 'simulated';
   status: TransportRequestStatus;
   assignedBusId?: string;
   assignedAlternativeId?: string;
   pickupPoint: string;
   contactNumber: string;
   travelDate: string;
+}
+
+export type EmergencyPriorityCategory = 'critical' | 'high' | 'normal';
+
+export interface EmergencyRouteRecommendation {
+  studentId: string;
+  fromNodeId: string;
+  toNodeId: string;
+  originalPath: string[];
+  alternativePath: string[];
+  distanceKm: number;
+  travelMinutes: number;
+  estimatedArrivalTime: string;
+  feasible: boolean;
+  explanation: string;
+}
+
+export interface EmergencyStudentOutcome {
+  studentId: string;
+  studentName: string;
+  examinationStartTime?: string;
+  priority: EmergencyPriorityCategory;
+  priorityReason: string;
+  status: 'reassigned' | 'confirmed' | 'waitlisted' | 'at_risk';
+  originalVehicle?: string;
+  assignedVehicle?: string;
+  estimatedArrivalTime?: string;
+  routePath?: string[];
+  explanation: string;
+}
+
+export interface EmergencyRunReport {
+  activatedAt: string;
+  simulationStartTime: string;
+  demandBefore: number;
+  demandAfter: number;
+  simulatedRequests: number;
+  allocatedBefore: number;
+  allocatedAfter: number;
+  affectedBusIds: string[];
+  affectedStudentIds: string[];
+  examStudentCount: number;
+  examsAllocatedOnTime: number;
+  examsAtRisk: number;
+  otherStudentsAllocated: number;
+  studentsReassigned: number;
+  studentsWaiting: number;
+  availableBusCount: number;
+  unavailableBusCount: number;
+  availableSeats: number;
+  affectedRoadIds: string[];
+  routeRecommendations: EmergencyRouteRecommendation[];
+  outcomes: EmergencyStudentOutcome[];
 }
 
 export interface TransportationRequest {
@@ -139,12 +195,13 @@ export interface TransportationRequest {
     total: number;
   };
   createdAt: string;
+  demandSource?: 'registered' | 'simulated';
 }
 
 export interface DisruptionEvent {
   id: string;
   timestamp: string;
-  type: 'bus_breakdown' | 'road_closure' | 'demand_surge' | 'capacity_reduction' | 'extra_bus_added';
+  type: 'bus_breakdown' | 'road_closure' | 'demand_surge' | 'capacity_reduction' | 'extra_bus_added' | 'exam_day_crisis';
   title: string;
   description: string;
   severity: 'low' | 'medium' | 'high' | 'critical';

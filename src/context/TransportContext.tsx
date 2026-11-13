@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import {
   Village,
   Institution,
@@ -12,6 +12,7 @@ import {
   Language,
   BusStatus,
   StudentPriorityTier,
+  EmergencyRunReport,
 } from '../types';
 import {
   INITIAL_VILLAGES,
@@ -25,6 +26,7 @@ import {
 } from '../data/demoData';
 import { AllocationEngine, AllocationDecision } from '../algorithms/allocationEngine';
 import { DisruptionEngine, DisruptionSimulationResult } from '../algorithms/disruptionEngine';
+import { EmergencyOptimizer } from '../algorithms/emergencyOptimizer';
 import { en } from '../locales/en';
 import { kn } from '../locales/kn';
 
@@ -49,6 +51,7 @@ interface TransportContextType {
   isRuralLite: boolean;
   toggleRuralLite: () => void;
   latestImpactReport: DisruptionSimulationResult['impactReport'] | null;
+  emergencyReport: EmergencyRunReport | null;
   clearImpactReport: () => void;
 
   // Actions
@@ -66,6 +69,8 @@ interface TransportContextType {
   simulateBusBreakdown: (busId: string) => void;
   simulateRoadClosure: (roadId: string, reason?: string) => void;
   simulateDemandSurge: () => void;
+  activateExamDayCrisis: () => void;
+  resetExamDayCrisis: () => void;
   addAuxiliaryBus: (busData: Omit<Bus, 'id' | 'occupiedSeats' | 'status'>) => void;
   updateBusStatus: (busId: string, status: BusStatus) => void;
   toggleRoadStatus: (roadId: string) => void;
@@ -83,6 +88,8 @@ export const TransportProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const [activeStudentId, setActiveStudentId] = useState<string>('std_01');
   const [isRuralLite, setIsRuralLite] = useState<boolean>(false);
   const [latestImpactReport, setLatestImpactReport] = useState<DisruptionSimulationResult['impactReport'] | null>(null);
+  const [emergencyReport, setEmergencyReport] = useState<EmergencyRunReport | null>(null);
+  const emergencyLock = useRef(false);
 
   // Core State
   const [villages, setVillages] = useState<Village[]>(INITIAL_VILLAGES);
@@ -129,6 +136,7 @@ export const TransportProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         if (parsed.requests) setRequests(parsed.requests);
         if (parsed.disruptions) setDisruptions(parsed.disruptions);
         if (parsed.activeStudentId) setActiveStudentId(parsed.activeStudentId);
+        if (parsed.emergencyReport) { setEmergencyReport(parsed.emergencyReport); emergencyLock.current = true; }
       }
     } catch (e) {
       console.warn('Failed to parse saved state from localStorage:', e);
@@ -148,12 +156,13 @@ export const TransportProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         requests,
         disruptions,
         activeStudentId,
+        emergencyReport,
       };
       localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(stateToSave));
     } catch (e) {
       console.warn('Failed to save state to localStorage:', e);
     }
-  }, [villages, institutions, roads, buses, alternatives, students, requests, disruptions, activeStudentId]);
+  }, [villages, institutions, roads, buses, alternatives, students, requests, disruptions, activeStudentId, emergencyReport]);
 
   const activeStudent = students.find((s) => s.id === activeStudentId) || students[0];
   const t = language === 'kn' ? kn : en;
@@ -226,6 +235,7 @@ export const TransportProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       priorityScore: decision.score,
       priorityTier: params.priorityTier,
       status: decision.status,
+      demandSource: 'registered',
       assignedVehicleId: decision.assignedBus?.id || decision.assignedAlternative?.id,
       assignedVehicleNumber: decision.assignedBus?.busNumber || decision.assignedAlternative?.vehicleNumber,
       assignedVehicleType: decision.assignedBus?.operatorName || decision.assignedAlternative?.name,
@@ -316,6 +326,28 @@ export const TransportProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     setNotifications((prev) => [...result.notifications, ...prev]);
   };
 
+  const activateExamDayCrisis = () => {
+    if (emergencyLock.current || emergencyReport) return;
+    emergencyLock.current = true;
+    try {
+      const result = EmergencyOptimizer.activate({ buses, alternatives, roads, students, requests, villages, institutions });
+      setBuses(result.buses);
+      setAlternatives(result.alternatives);
+      setRoads(result.roads);
+      setStudents(result.students);
+      setRequests(result.requests);
+      setDisruptions((previous) => [result.event, ...previous]);
+      setNotifications((previous) => [...result.notifications, ...previous]);
+      setEmergencyReport(result.report);
+      setLatestImpactReport(null);
+    } catch (error) {
+      emergencyLock.current = false;
+      console.error('Unable to activate the Exam Day Crisis simulation:', error);
+    }
+  };
+
+  const resetExamDayCrisis = () => resetDemoData();
+
   // 5. Add Auxiliary Bus
   const addAuxiliaryBus = (busData: Omit<Bus, 'id' | 'occupiedSeats' | 'status'>) => {
     const result = DisruptionEngine.addAuxiliaryBus(
@@ -370,6 +402,8 @@ export const TransportProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   // 9. Reset Demo Data
   const resetDemoData = () => {
+    emergencyLock.current = false;
+    setEmergencyReport(null);
     localStorage.removeItem(LOCAL_STORAGE_KEY);
     setVillages(INITIAL_VILLAGES);
     setInstitutions(INITIAL_INSTITUTIONS);
@@ -425,11 +459,14 @@ export const TransportProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         isRuralLite,
         toggleRuralLite,
         latestImpactReport,
+        emergencyReport,
         clearImpactReport,
         submitRideRequest,
         simulateBusBreakdown,
         simulateRoadClosure,
         simulateDemandSurge,
+        activateExamDayCrisis,
+        resetExamDayCrisis,
         addAuxiliaryBus,
         updateBusStatus,
         toggleRoadStatus,

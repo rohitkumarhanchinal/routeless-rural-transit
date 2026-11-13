@@ -1,6 +1,19 @@
 export const kn = {
   app_name: 'ರೂಟ್‌ಲೆಸ್',
   app_tagline: 'ಕೊನೆಯ ಮೈಲಿ: ಗ್ರಾಮೀಣ ಸಾರಿಗೆ ಜಾಲ',
+
+  // Navigation Sections
+  nav_overview: 'ಅವಲೋಕನ',
+  nav_student: 'ವಿದ್ಯಾರ್ಥಿ ಪೋರ್ಟಲ್',
+  nav_operator: 'ನಿರ್ವಾಹಕ ಡ್ಯಾಶ್‌ಬೋರ್ಡ್',
+  nav_routes: 'ಬಸ್ ಮಾರ್ಗಗಳು',
+  nav_requests: 'ಸಾರಿಗೆ ವಿನಂತಿಗಳು',
+  nav_optimization: 'ಮಾರ್ಗ ಆಪ್ಟಿಮೈಸೇಶನ್',
+  nav_analytics: 'ವಿಶ್ಲೇಷಣೆ',
+  nav_assistant: 'ಎಐ ಸಹಾಯಕ',
+  nav_settings: 'ಸೆಟ್ಟಿಂಗ್‌ಗಳು',
+  nav_simulator: 'ವ್ಯತ್ಯಯ ಸಿಮ್ಯುಲೇಟರ್',
+
   role_student: 'ವಿದ್ಯಾರ್ಥಿ ಪೋರ್ಟಲ್',
   role_operator: 'ಸಾರಿಗೆ ನಿರ್ವಾಹಕರು',
   role_analytics: 'ಬೇಡಿಕೆ ವಿಶ್ಲೇಷಣೆ',
@@ -13,6 +26,19 @@ export const kn = {
   kannada: 'ಕನ್ನಡ',
   english: 'English',
 
+  // Top Statistics
+  stat_active_buses: 'ಸಕ್ರಿಯ ಬಸ್‌ಗಳು',
+  stat_total_students: 'ಒಟ್ಟು ವಿದ್ಯಾರ್ಥಿಗಳು',
+  stat_allocated_students: 'ಹಂಚಿಕೆಯಾದ ವಿದ್ಯಾರ್ಥಿಗಳು',
+  stat_pending_requests: 'ಬಾಕಿ ವಿನಂತಿಗಳು',
+
+  // Sections on Dashboard
+  section_network: 'ಸಾರಿಗೆ ಜಾಲ',
+  section_bus_availability: 'ಬಸ್ ಲಭ್ಯತೆ ಮತ್ತು ಸಾಮರ್ಥ್ಯ',
+  section_allocation: 'ವಿದ್ಯಾರ್ಥಿ ಹಂಚಿಕೆ ಸ್ಥಿತಿ',
+  section_disruptions: 'ಸಕ್ರಿಯ ವ್ಯತ್ಯಯ ಎಚ್ಚರಿಕೆಗಳು',
+  section_recent_activity: 'ಇತ್ತೀಚಿನ ವ್ಯವಸ್ಥೆ ಚಟುವಟಿಕೆ',
+
   // Student Portal
   student_dashboard: 'ವಿದ್ಯಾರ್ಥಿ ಸಾರಿಗೆ ಪಾಸ್ & ಸ್ಥಿತಿ',
   active_student: 'ಸಕ್ರಿಯ ವಿದ್ಯಾರ್ಥಿ ಪ್ರೊಫೈಲ್',
@@ -21,24 +47,24 @@ export const kn = {
   assigned_vehicle: 'ನಿಗದಿಪಡಿಸಿದ ವಾಹನ',
   arrival_time: 'ತಲುಪುವ ಸಮಯ',
   seat_status: 'ಆಸನ ಸ್ಥಿತಿ',
-  status_confirmed: 'ಆಸನ ದೃಢಪಟ್ಟಿದೆ',
+  status_confirmed: 'ದೃಢಪಟ್ಟಿದೆ',
   status_waitlisted: 'ಕಾಯುವ ಪಟ್ಟಿ',
-  status_reassigned: 'ಪರ್ಯಾಯ ವಾಹನಕ್ಕೆ ಮರುಹಂಚಿಕೆ',
+  status_reassigned: 'ಮರುಹಂಚಿಕೆ',
   status_pending: 'ಪರಿಶೀಲನೆಯಲ್ಲಿದೆ',
-  request_new_ride: 'ಹೊಸ ಪ್ರಯಾಣಕ್ಕೆ ವಿನಂತಿ',
+  request_new_ride: 'ಆಸನ ವಿನಂತಿ',
   board_exam_today: 'ಇಂದು ಪರೀಕ್ಷೆ ಇದೆ',
   female_safety_priority: 'ಹೆಣ್ಣುಮಕ್ಕಳ ಸುರಕ್ಷತಾ ಆದ್ಯತೆ',
   available_buses: 'ಲಭ್ಯವಿರುವ ಬಸ್‌ಗಳು ಮತ್ತು ಮಾರ್ಗಗಳು',
   empty_seats: 'ಖಾಲಿ ಆಸನಗಳು',
   occupied_seats: 'ಭರ್ತಿಯಾದ ಆಸನಗಳು',
   view_route: 'ಮಾರ್ಗ ನಕ್ಷೆ ವೀಕ್ಷಿಸಿ',
-  allocation_reason: 'ಎಐ ಹಂಚಿಕೆ ಕಾರಣ',
+  allocation_reason: 'ಹಂಚಿಕೆ ನಿರ್ಧಾರ',
 
   // Operator
   operator_command: 'ಸಾರಿಗೆ ನಿಯಂತ್ರಣ ಕೇಂದ್ರ',
   fleet_management: 'ಬಸ್ ಫ್ಲೀಟ್ ನಿರ್ವಹಣೆ',
   live_requests: 'ವಿದ್ಯಾರ್ಥಿ ವಿನಂತಿಗಳ ಸರತಿ',
-  mark_breakdown: 'ಸ್ಥಗಿತ ವರದಿ (ಬ್ರೇಕ್‌ಡೌನ್)',
+  mark_breakdown: 'ಸ್ಥಗಿತ ವರದಿ',
   mark_available: 'ಸಕ್ರಿಯಗೊಳಿಸಿ',
   add_aux_bus: 'ಹೆಚ್ಚುವರಿ ಬಸ್ ಸೇರಿಸಿ',
   capacity_utilization: 'ಆಸನ ಸಾಮರ್ಥ್ಯ ಬಳಕೆ',

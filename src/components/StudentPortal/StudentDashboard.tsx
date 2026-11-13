@@ -33,6 +33,7 @@ export const StudentDashboard: React.FC = () => {
     roads,
     requests,
     disruptions,
+    emergencyReport,
     submitRideRequest,
     setActiveRole,
   } = useTransport();
@@ -65,9 +66,12 @@ export const StudentDashboard: React.FC = () => {
   const assignedBus = buses.find((b) => b.id === activeStudent.assignedBusId);
   const assignedAlt = alternatives.find((a) => a.id === activeStudent.assignedAlternativeId);
   const latestRequest = requests.find((r) => r.studentId === activeStudent.id);
+  const emergencyOutcome = emergencyReport?.outcomes.find((outcome) => outcome.studentId === activeStudent.id);
+  const emergencyRoute = emergencyReport?.routeRecommendations.find((route) => route.studentId === activeStudent.id);
+  const emergencyRouteNames = emergencyRoute?.alternativePath.map((nodeId) => villages.find((v) => v.id === nodeId)?.name || institutions.find((i) => i.id === nodeId)?.name || nodeId).join(' → ');
 
   // Check if student route is disrupted
-  const isStudentRouteDisrupted = disruptions.some((d) =>
+  const isStudentRouteDisrupted = Boolean(emergencyReport?.affectedStudentIds.includes(activeStudent.id)) || disruptions.some((d) =>
     d.affectedStudentIds.includes(activeStudent.id) || d.affectedBusId === activeStudent.assignedBusId
   );
 
@@ -99,15 +103,15 @@ export const StudentDashboard: React.FC = () => {
   return (
     <div className="space-y-6 max-w-7xl mx-auto px-4 py-6">
       {/* Top Banner: Demo Student Profile Selector */}
-      <div className="bg-slate-800/90 border border-slate-700/80 rounded-2xl p-4 sm:p-5 shadow-lg backdrop-blur">
+      <div className="bg-slate-50/90 border border-slate-200/80 rounded-2xl p-4 sm:p-5 shadow-lg backdrop-blur">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex items-center space-x-3.5">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-brand-600 to-indigo-600 flex items-center justify-center text-white font-bold text-lg shadow-md">
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-brand-600 to-indigo-600 flex items-center justify-center text-slate-900 font-bold text-lg shadow-md">
               {activeStudent.name.charAt(0)}
             </div>
             <div>
               <div className="flex items-center space-x-2">
-                <h1 className="text-xl font-bold text-white">
+                <h1 className="text-xl font-bold text-slate-900">
                   {language === 'kn' ? activeStudent.kannadaName : activeStudent.name}
                 </h1>
                 <span className="text-xs px-2.5 py-0.5 rounded-full bg-brand-500/10 text-brand-400 border border-brand-500/20 font-medium">
@@ -119,23 +123,23 @@ export const StudentDashboard: React.FC = () => {
                   </span>
                 )}
               </div>
-              <p className="text-xs text-slate-400 mt-0.5">
-                {activeStudent.course} • {activeStudent.yearOfStudy} | From: <span className="text-slate-200">{studentVillage?.name}</span> ➔ To: <span className="text-slate-200">{studentInstitution?.name}</span>
+              <p className="text-xs text-slate-500 mt-0.5">
+                {activeStudent.course} • {activeStudent.yearOfStudy} | From: <span className="text-slate-700">{studentVillage?.name}</span> ➔ To: <span className="text-slate-700">{studentInstitution?.name}</span>
               </p>
             </div>
           </div>
 
           {/* Quick Demo Student Switcher */}
           <div className="flex items-center space-x-2">
-            <label className="text-xs text-slate-400 font-medium whitespace-nowrap">{t.switch_student}:</label>
+            <label className="text-xs text-slate-500 font-medium whitespace-nowrap">{t.switch_student}:</label>
             <select
               value={activeStudent.id}
               onChange={(e) => handleSelectStudent(e.target.value)}
-              className="bg-slate-900 border border-slate-700 rounded-lg text-xs font-semibold px-3 py-2 text-slate-200 focus:outline-none focus:border-brand-500"
+              className="bg-white border border-slate-200 rounded-lg text-xs font-semibold px-3 py-2 text-slate-700 focus:outline-none focus:border-brand-500"
             >
-              {students.map((s) => (
+              {students.map((s, index) => (
                 <option key={s.id} value={s.id}>
-                  {s.name} ({s.status.toUpperCase()} - {s.hasBoardExamToday ? 'Exam' : 'Regular'})
+                  {s.demandSource === 'simulated' ? `Simulated request ${index + 1}` : `Demo profile ${index + 1}`}
                 </option>
               ))}
             </select>
@@ -152,7 +156,7 @@ export const StudentDashboard: React.FC = () => {
             Your primary scheduled transit service has reported a breakdown or route blockage. The Routeless AI system has initiated emergency reallocation protocols.
             <button
               onClick={() => setActiveRole('simulator')}
-              className="ml-3 underline font-semibold text-rose-300 hover:text-white"
+              className="ml-3 underline font-semibold text-rose-300 hover:text-slate-900"
             >
               View Disruption Impact Report ➔
             </button>
@@ -160,17 +164,33 @@ export const StudentDashboard: React.FC = () => {
         </div>
       )}
 
+      {emergencyOutcome && (
+        <section className={`student-emergency-update ${emergencyOutcome.status === 'at_risk' || emergencyOutcome.status === 'waitlisted' ? 'at-risk' : 'safe'}`} aria-labelledby="student-emergency-title">
+          <div className="student-emergency-heading"><div><span className="eyebrow">EXAM DAY TRANSPORT UPDATE</span><h2 id="student-emergency-title">Your emergency travel plan</h2></div><span className={`crisis-status ${emergencyOutcome.status === 'at_risk' || emergencyOutcome.status === 'waitlisted' ? 'warn' : 'good'}`}>{emergencyOutcome.status === 'at_risk' ? 'At risk' : emergencyOutcome.status}</span></div>
+          <p className="student-emergency-reason">{emergencyOutcome.explanation}</p>
+          <div className="student-emergency-details">
+            {emergencyOutcome.originalVehicle && <div><span>Previous bus</span><strong>{emergencyOutcome.originalVehicle} · unavailable</strong></div>}
+            <div><span>New vehicle</span><strong>{emergencyOutcome.assignedVehicle || 'No seat confirmed'}</strong></div>
+            <div><span>Pickup</span><strong>{activeStudent.pickupPoint || studentVillage?.landmark || 'Village main stop'}</strong></div>
+            <div><span>Estimated arrival</span><strong>{emergencyOutcome.estimatedArrivalTime || 'Not available'}</strong></div>
+            {emergencyOutcome.examinationStartTime && <div><span>Exam priority</span><strong>{emergencyOutcome.priority === 'critical' ? 'Priority 1 · Critical' : emergencyOutcome.priority === 'high' ? 'Priority 2 · High' : 'Priority 3 · Normal'} · Exam {emergencyOutcome.examinationStartTime}</strong></div>}
+          </div>
+          {emergencyRouteNames && <div className="student-route-note"><MapPin size={15}/><span><strong>Flood-safe route estimate:</strong> {emergencyRouteNames}</span></div>}
+          <p className="student-demo-note">Estimated times use the local demonstration road data. Confirm final pickup instructions with your operator.</p>
+        </section>
+      )}
+
       {/* Main Grid: Digital Boarding Pass & New Request */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Left Column: Digital Boarding Pass & Status (7 cols) */}
         <div className="lg:col-span-7 space-y-6">
-          <div className="bg-slate-800/90 border border-slate-700/80 rounded-2xl p-6 shadow-xl relative overflow-hidden">
+          <div className="bg-slate-50/90 border border-slate-200/80 rounded-2xl p-6 shadow-xl relative overflow-hidden">
             <div className="absolute top-0 right-0 transform translate-x-4 -translate-y-4 w-40 h-40 bg-brand-500/5 rounded-full blur-2xl pointer-events-none" />
 
-            <div className="flex items-center justify-between pb-4 border-b border-slate-700">
+            <div className="flex items-center justify-between pb-4 border-b border-slate-200">
               <div className="flex items-center space-x-2">
                 <ShieldCheck className="w-5 h-5 text-brand-400" />
-                <h2 className="text-base font-bold text-white uppercase tracking-wider">
+                <h2 className="text-base font-bold text-slate-900 uppercase tracking-wider">
                   {t.student_dashboard}
                 </h2>
               </div>
@@ -191,7 +211,7 @@ export const StudentDashboard: React.FC = () => {
                   </span>
                 )}
                 {activeStudent.status === 'pending' && (
-                  <span className="px-3 py-1 rounded-full text-xs font-bold bg-slate-700 text-slate-300 flex items-center">
+                  <span className="px-3 py-1 rounded-full text-xs font-bold bg-slate-700 text-slate-600 flex items-center">
                     <Clock className="w-3.5 h-3.5 mr-1" /> {t.status_pending}
                   </span>
                 )}
@@ -200,19 +220,19 @@ export const StudentDashboard: React.FC = () => {
 
             {/* Boarding Pass Core Details */}
             <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="p-3.5 rounded-xl bg-slate-900/80 border border-slate-700/60">
-                <span className="text-[11px] text-slate-400 uppercase font-semibold flex items-center">
+              <div className="p-3.5 rounded-xl bg-white/80 border border-slate-200/60">
+                <span className="text-[11px] text-slate-500 uppercase font-semibold flex items-center">
                   <Bus className="w-3.5 h-3.5 mr-1.5 text-brand-400" />
                   {t.assigned_vehicle}
                 </span>
-                <p className="text-base font-bold text-white mt-1">
+                <p className="text-base font-bold text-slate-900 mt-1">
                   {assignedBus
                     ? `${assignedBus.busNumber} (${assignedBus.operatorName})`
                     : assignedAlt
                     ? `${assignedAlt.vehicleNumber} (${assignedAlt.name})`
                     : 'Awaiting Vehicle Assignment'}
                 </p>
-                <p className="text-xs text-slate-400 mt-0.5">
+                <p className="text-xs text-slate-500 mt-0.5">
                   {assignedBus
                     ? assignedBus.model
                     : assignedAlt
@@ -221,15 +241,15 @@ export const StudentDashboard: React.FC = () => {
                 </p>
               </div>
 
-              <div className="p-3.5 rounded-xl bg-slate-900/80 border border-slate-700/60">
-                <span className="text-[11px] text-slate-400 uppercase font-semibold flex items-center">
+              <div className="p-3.5 rounded-xl bg-white/80 border border-slate-200/60">
+                <span className="text-[11px] text-slate-500 uppercase font-semibold flex items-center">
                   <MapPin className="w-3.5 h-3.5 mr-1.5 text-rose-400" />
                   {t.pickup_point}
                 </span>
-                <p className="text-sm font-bold text-white mt-1">
+                <p className="text-sm font-bold text-slate-900 mt-1">
                   {activeStudent.pickupPoint || studentVillage?.landmark}
                 </p>
-                <p className="text-xs text-slate-400 mt-0.5">
+                <p className="text-xs text-slate-500 mt-0.5">
                   Scheduled Arrival: <span className="text-emerald-400 font-semibold">{activeStudent.requiredArrivalTime}</span>
                 </p>
               </div>
@@ -237,10 +257,10 @@ export const StudentDashboard: React.FC = () => {
 
             {/* Driver & Contact info if assigned */}
             {assignedBus && (
-              <div className="mt-4 p-3 rounded-xl bg-slate-900/50 border border-slate-700/40 flex items-center justify-between text-xs text-slate-300">
+              <div className="mt-4 p-3 rounded-xl bg-white/50 border border-slate-200/40 flex items-center justify-between text-xs text-slate-600">
                 <div className="flex items-center space-x-2">
-                  <User className="w-4 h-4 text-slate-400" />
-                  <span>Driver: <strong className="text-white">{assignedBus.driverName}</strong></span>
+                  <User className="w-4 h-4 text-slate-500" />
+                  <span>Driver: <strong className="text-slate-900">{assignedBus.driverName}</strong></span>
                 </div>
                 <div className="flex items-center space-x-1.5 text-brand-400">
                   <Phone className="w-3.5 h-3.5" />
@@ -257,7 +277,7 @@ export const StudentDashboard: React.FC = () => {
                   {t.allocation_reason}
                 </h3>
               </div>
-              <p className="text-xs text-slate-200 leading-relaxed">
+              <p className="text-xs text-slate-700 leading-relaxed">
                 {latestRequest?.allocationReason ||
                   (activeStudent.status === 'confirmed'
                     ? 'Allocated based on direct corridor compatibility, arrival time buffer, and available seating capacity.'
@@ -267,20 +287,20 @@ export const StudentDashboard: React.FC = () => {
               {/* Score Breakdown if present */}
               {latestRequest?.scoreBreakdown && (
                 <div className="mt-3 pt-3 border-t border-brand-500/20 grid grid-cols-4 gap-2 text-center">
-                  <div className="bg-slate-900/60 p-2 rounded-lg">
-                    <span className="text-[10px] text-slate-400 block">Route Match</span>
+                  <div className="bg-white/60 p-2 rounded-lg">
+                    <span className="text-[10px] text-slate-500 block">Route Match</span>
                     <strong className="text-xs text-brand-300">+{latestRequest.scoreBreakdown.routeMatch}</strong>
                   </div>
-                  <div className="bg-slate-900/60 p-2 rounded-lg">
-                    <span className="text-[10px] text-slate-400 block">Timing Match</span>
+                  <div className="bg-white/60 p-2 rounded-lg">
+                    <span className="text-[10px] text-slate-500 block">Timing Match</span>
                     <strong className="text-xs text-brand-300">+{latestRequest.scoreBreakdown.timeMatch}</strong>
                   </div>
-                  <div className="bg-slate-900/60 p-2 rounded-lg">
-                    <span className="text-[10px] text-slate-400 block">Capacity Score</span>
+                  <div className="bg-white/60 p-2 rounded-lg">
+                    <span className="text-[10px] text-slate-500 block">Capacity Score</span>
                     <strong className="text-xs text-brand-300">+{latestRequest.scoreBreakdown.capacityScore}</strong>
                   </div>
-                  <div className="bg-slate-900/60 p-2 rounded-lg">
-                    <span className="text-[10px] text-slate-400 block">Priority Tier</span>
+                  <div className="bg-white/60 p-2 rounded-lg">
+                    <span className="text-[10px] text-slate-500 block">Priority Tier</span>
                     <strong className="text-xs text-emerald-400">+{latestRequest.scoreBreakdown.priorityBonus}</strong>
                   </div>
                 </div>
@@ -288,7 +308,7 @@ export const StudentDashboard: React.FC = () => {
             </div>
 
             {/* Action buttons */}
-            <div className="mt-5 flex items-center justify-between pt-4 border-t border-slate-700/80">
+            <div className="mt-5 flex items-center justify-between pt-4 border-t border-slate-200/80">
               <button
                 onClick={() => setActiveRole('routes')}
                 className="text-xs text-brand-400 hover:text-brand-300 font-semibold flex items-center"
@@ -297,7 +317,7 @@ export const StudentDashboard: React.FC = () => {
               </button>
               <button
                 onClick={() => setActiveRole('assistant')}
-                className="text-xs bg-slate-700 hover:bg-slate-600 px-3 py-1.5 rounded-lg text-slate-200 font-medium flex items-center"
+                className="text-xs bg-slate-700 hover:bg-slate-600 px-3 py-1.5 rounded-lg text-slate-700 font-medium flex items-center"
               >
                 <HelpCircle className="w-3.5 h-3.5 mr-1.5 text-cyan-400" />
                 Ask Routeless AI
@@ -306,15 +326,15 @@ export const StudentDashboard: React.FC = () => {
           </div>
 
           {/* Available Scheduled Buses Section */}
-          <div className="bg-slate-800/90 border border-slate-700/80 rounded-2xl p-5 shadow-lg">
-            <h3 className="text-sm font-bold text-white mb-3 flex items-center justify-between">
+          <div className="bg-slate-50/90 border border-slate-200/80 rounded-2xl p-5 shadow-lg">
+            <h3 className="text-sm font-bold text-slate-900 mb-3 flex items-center justify-between">
               <span>{t.available_buses} ({relevantBuses.length})</span>
-              <span className="text-xs text-slate-400 font-normal">Real-Time Seat Inventory</span>
+              <span className="text-xs text-slate-500 font-normal">Real-Time Seat Inventory</span>
             </h3>
 
             <div className="space-y-3">
               {relevantBuses.length === 0 ? (
-                <p className="text-xs text-slate-400 p-3 bg-slate-900/50 rounded-xl">
+                <p className="text-xs text-slate-500 p-3 bg-white/50 rounded-xl">
                   No standard scheduled government buses directly serve this specific village-to-institution corridor. Check Verified Alternatives below.
                 </p>
               ) : (
@@ -330,18 +350,18 @@ export const StudentDashboard: React.FC = () => {
                         bus.status === 'breakdown'
                           ? 'bg-rose-950/20 border-rose-500/40 text-rose-300'
                           : isFull
-                          ? 'bg-slate-900/70 border-slate-700/60'
-                          : 'bg-slate-900/90 border-slate-700 hover:border-brand-500/50'
+                          ? 'bg-white/70 border-slate-200/60'
+                          : 'bg-white/90 border-slate-200 hover:border-brand-500/50'
                       }`}
                     >
                       <div className="flex items-center justify-between">
                         <div>
                           <div className="flex items-center space-x-2">
-                            <span className="font-bold text-white text-sm">{bus.busNumber}</span>
-                            <span className="text-[11px] text-slate-400">({bus.operatorName})</span>
+                            <span className="font-bold text-slate-900 text-sm">{bus.busNumber}</span>
+                            <span className="text-[11px] text-slate-500">({bus.operatorName})</span>
                           </div>
-                          <p className="text-xs text-slate-400 mt-0.5">
-                            Departs: <strong className="text-slate-200">{bus.departureTime}</strong> | Est. Arrival: <strong className="text-slate-200">{bus.estimatedArrivalTime}</strong>
+                          <p className="text-xs text-slate-500 mt-0.5">
+                            Departs: <strong className="text-slate-700">{bus.departureTime}</strong> | Est. Arrival: <strong className="text-slate-700">{bus.estimatedArrivalTime}</strong>
                           </p>
                         </div>
                         <div className="text-right">
@@ -365,11 +385,11 @@ export const StudentDashboard: React.FC = () => {
 
                       {/* Progress bar of occupied seats */}
                       <div className="mt-2.5">
-                        <div className="flex justify-between text-[10px] text-slate-400 mb-1">
+                        <div className="flex justify-between text-[10px] text-slate-500 mb-1">
                           <span>Capacity: {bus.occupiedSeats}/{bus.totalCapacity} seats</span>
                           <span>{occupancyPct}% Booked</span>
                         </div>
-                        <div className="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                        <div className="w-full bg-slate-50 rounded-full h-1.5 overflow-hidden">
                           <div
                             className={`h-full transition-all duration-300 ${
                               occupancyPct >= 100
@@ -393,8 +413,8 @@ export const StudentDashboard: React.FC = () => {
         {/* Right Column: Request New Ride Form & Verified Alternatives (5 cols) */}
         <div className="lg:col-span-5 space-y-6">
           {/* Request Form */}
-          <div className="bg-slate-800/90 border border-slate-700/80 rounded-2xl p-6 shadow-xl">
-            <h2 className="text-base font-bold text-white mb-4 flex items-center">
+          <div className="bg-slate-50/90 border border-slate-200/80 rounded-2xl p-6 shadow-xl">
+            <h2 className="text-base font-bold text-slate-900 mb-4 flex items-center">
               <Send className="w-4 h-4 mr-2 text-brand-400" />
               {t.request_new_ride}
             </h2>
@@ -407,11 +427,11 @@ export const StudentDashboard: React.FC = () => {
 
             <form onSubmit={handleSubmitRequest} className="space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">Pickup Village</label>
+                <label className="block text-xs font-semibold text-slate-600 mb-1">Pickup Village</label>
                 <select
                   value={selectedVillageId}
                   onChange={(e) => setSelectedVillageId(e.target.value)}
-                  className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-brand-500"
+                  className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-brand-500"
                 >
                   {villages.map((v) => (
                     <option key={v.id} value={v.id}>
@@ -422,11 +442,11 @@ export const StudentDashboard: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">Destination Institution</label>
+                <label className="block text-xs font-semibold text-slate-600 mb-1">Destination Institution</label>
                 <select
                   value={selectedInstitutionId}
                   onChange={(e) => setSelectedInstitutionId(e.target.value)}
-                  className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-brand-500"
+                  className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-brand-500"
                 >
                   {institutions.map((inst) => (
                     <option key={inst.id} value={inst.id}>
@@ -438,20 +458,20 @@ export const StudentDashboard: React.FC = () => {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1">Travel Date</label>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1">Travel Date</label>
                   <input
                     type="date"
                     value={travelDate}
                     onChange={(e) => setTravelDate(e.target.value)}
-                    className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-brand-500"
+                    className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-brand-500"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1">Required Arrival</label>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1">Required Arrival</label>
                   <select
                     value={arrivalTime}
                     onChange={(e) => setArrivalTime(e.target.value)}
-                    className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-brand-500"
+                    className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-brand-500"
                   >
                     <option value="08:30 AM">08:30 AM</option>
                     <option value="08:45 AM">08:45 AM (Polytechnic Standard)</option>
@@ -463,25 +483,25 @@ export const StudentDashboard: React.FC = () => {
               </div>
 
               {/* Priority Boost Checkboxes */}
-              <div className="pt-2 border-t border-slate-700/60 space-y-2.5">
-                <label className="flex items-center space-x-2.5 text-xs text-slate-200 cursor-pointer">
+              <div className="pt-2 border-t border-slate-200/60 space-y-2.5">
+                <label className="flex items-center space-x-2.5 text-xs text-slate-700 cursor-pointer">
                   <input
                     type="checkbox"
                     checked={hasExam}
                     onChange={(e) => setHasExam(e.target.checked)}
-                    className="w-4 h-4 rounded bg-slate-900 border-slate-700 text-brand-500 focus:ring-0"
+                    className="w-4 h-4 rounded bg-white border-slate-200 text-brand-500 focus:ring-0"
                   />
                   <span className="font-medium text-amber-300">🎓 Board / Semester Exam Today (+40 Score)</span>
                 </label>
 
-                <label className="flex items-center space-x-2.5 text-xs text-slate-200 cursor-pointer">
+                <label className="flex items-center space-x-2.5 text-xs text-slate-700 cursor-pointer">
                   <input
                     type="checkbox"
                     checked={priorityTier === 'medical_girl_safety'}
                     onChange={(e) =>
                       setPriorityTier(e.target.checked ? 'medical_girl_safety' : 'standard')
                     }
-                    className="w-4 h-4 rounded bg-slate-900 border-slate-700 text-brand-500 focus:ring-0"
+                    className="w-4 h-4 rounded bg-white border-slate-200 text-brand-500 focus:ring-0"
                   />
                   <span className="font-medium text-cyan-300">🛡️ Female Student Last-Mile Priority (+25 Score)</span>
                 </label>
@@ -498,9 +518,9 @@ export const StudentDashboard: React.FC = () => {
           </div>
 
           {/* Verified Alternative Providers Panel */}
-          <div className="bg-slate-800/90 border border-slate-700/80 rounded-2xl p-5 shadow-lg">
+          <div className="bg-slate-50/90 border border-slate-200/80 rounded-2xl p-5 shadow-lg">
             <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-bold text-white flex items-center">
+              <h3 className="text-sm font-bold text-slate-900 flex items-center">
                 <ShieldCheck className="w-4 h-4 mr-1.5 text-emerald-400" />
                 {t.verified_alternatives}
               </h3>
@@ -509,18 +529,18 @@ export const StudentDashboard: React.FC = () => {
               </span>
             </div>
 
-            <p className="text-xs text-slate-400 mb-3">
+            <p className="text-xs text-slate-500 mb-3">
               When regular state buses are full or delayed, Routeless partners with verified Panchayat feeders and student shuttles.
             </p>
 
             <div className="space-y-3">
               {alternatives.map((alt) => (
-                <div key={alt.id} className="p-3 rounded-xl bg-slate-900/80 border border-slate-700/60 text-xs">
+                <div key={alt.id} className="p-3 rounded-xl bg-white/80 border border-slate-200/60 text-xs">
                   <div className="flex items-center justify-between">
-                    <span className="font-bold text-slate-200">{alt.name}</span>
+                    <span className="font-bold text-slate-700">{alt.name}</span>
                     <span className="text-emerald-400 font-semibold">{alt.availableSeats} Seats Open</span>
                   </div>
-                  <div className="mt-1 flex items-center justify-between text-slate-400 text-[11px]">
+                  <div className="mt-1 flex items-center justify-between text-slate-500 text-[11px]">
                     <span>Plate: {alt.vehicleNumber}</span>
                     <span>Student Fare: {alt.farePerStudent === 0 ? 'FREE (Panchayat Subsidized)' : `₹${alt.farePerStudent}`}</span>
                   </div>
