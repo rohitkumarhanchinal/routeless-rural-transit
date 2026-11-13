@@ -125,6 +125,18 @@ export const StudentDashboard: React.FC = () => {
       : `Alternative not available. ${decision.reason}`);
   };
 
+  const handleCancelRideForm = () => {
+    setSelectedVillageId(activeStudent.villageId);
+    setSelectedInstitutionId(activeStudent.institutionId);
+    setTravelDate(activeStudent.travelDate || new Date().toISOString().slice(0, 10));
+    setDepartureTime('07:30 AM');
+    setArrivalTime(activeStudent.requiredArrivalTime || '08:45 AM');
+    setHasExam(activeStudent.hasBoardExamToday);
+    setExamStartTime(toTimeInputValue(activeStudent.examinationStartTime || '09:00 AM'));
+    setPriorityTier(activeStudent.priorityTier);
+    setRequestSubmittedSuccess(null);
+  };
+
   return (
     <div className="space-y-6 max-w-7xl mx-auto px-4 py-6">
       {/* Current signed-in student profile */}
@@ -518,13 +530,13 @@ export const StudentDashboard: React.FC = () => {
                 </label>
               </div>
 
-              <button
-                type="submit"
-                className="w-full mt-4 py-2.5 px-4 bg-brand-600 hover:bg-brand-500 text-white rounded-xl font-bold text-xs shadow-lg shadow-brand-600/30 transition flex items-center justify-center space-x-2"
-              >
-                <Sparkles className="w-4 h-4" />
-                <span>Run AI Intelligent Allocation</span>
-              </button>
+              <div className="request-form-actions">
+                <button type="button" onClick={handleCancelRideForm} className="button button-secondary request-cancel">Cancel</button>
+                <button type="submit" className="button button-primary request-submit">
+                  <Sparkles className="w-4 h-4" aria-hidden="true" />
+                  <span>Request a seat</span>
+                </button>
+              </div>
             </form>
           </div>
 

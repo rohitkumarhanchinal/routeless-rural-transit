@@ -47,6 +47,10 @@
 .button-primary:hover { background: #1d4ed8; }
 .button-secondary { background: white; border: 1px solid #dce4ef; color: #243c5c; }
 .button-secondary:hover { background: #f5f7fb; }
+.request-form-actions { display: flex; align-items: stretch; gap: 10px; margin-top: 16px; }
+.request-form-actions .request-cancel { flex: 0 0 auto; min-width: 92px; min-height: 48px; }
+.request-form-actions .request-submit { flex: 1 1 auto; min-width: 0; min-height: 48px; color: #fff !important; background: #2563eb !important; border: 1px solid #2563eb !important; box-shadow: 0 4px 10px #2563eb2b; font-size: 14px; font-weight: 700; white-space: normal; }
+.request-form-actions .request-submit:hover { background: #1d4ed8 !important; border-color: #1d4ed8 !important; }
 .metric-grid { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 16px; margin-bottom: 18px; }
 .metric-card,.panel { background: #fff; border: 1px solid #e3e9f1; border-radius: 12px; box-shadow: 0 2px 8px #142b4f08; }
 .metric-card { position: relative; min-height: 148px; padding: 19px; display: flex; flex-direction: column; align-items: flex-start; }
