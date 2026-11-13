@@ -82,6 +82,9 @@ export const StudentDashboard: React.FC = () => {
   const relevantBuses = buses.filter(
     (b) => b.stops.includes(activeStudent.villageId) && b.stops.includes(activeStudent.institutionId)
   );
+  const matchingAlternativeProviders = alternatives.filter((provider) =>
+    provider.isVerified && provider.operatingVillages.includes(selectedVillageId) && provider.destinationInstitutions.includes(selectedInstitutionId)
+  );
 
   const handleSubmitRequest = (e: React.FormEvent) => {
     e.preventDefault();
@@ -102,6 +105,24 @@ export const StudentDashboard: React.FC = () => {
         ? `Seat Confirmed! Assigned to ${decision.assignedBus?.busNumber || decision.assignedAlternative?.name}.`
         : `Request Waitlisted. ${decision.reason}`
     );
+  };
+
+  const handleAlternativeRequest = (preferredAlternativeId: string) => {
+    const decision = submitRideRequest({
+      studentId: activeStudent.id,
+      villageId: selectedVillageId,
+      institutionId: selectedInstitutionId,
+      departureTime,
+      arrivalTime,
+      travelDate,
+      priorityTier: hasExam ? 'high_exam' : priorityTier === 'high_exam' ? (activeStudent.gender === 'female' ? 'medical_girl_safety' : 'standard') : priorityTier,
+      hasBoardExamToday: hasExam,
+      examinationStartTime: hasExam ? toDisplayTimeValue(examStartTime) : undefined,
+      preferredAlternativeId,
+    });
+    setRequestSubmittedSuccess(decision.status === 'confirmed'
+      ? `Alternative seat confirmed: ${decision.assignedAlternative?.name}. ${decision.reason}`
+      : `Alternative not available. ${decision.reason}`);
   };
 
   return (
@@ -524,18 +545,16 @@ export const StudentDashboard: React.FC = () => {
             </p>
 
             <div className="space-y-3">
-              {alternatives.map((alt) => (
-                <div key={alt.id} className="p-3 rounded-xl bg-white/80 border border-slate-200/60 text-xs">
-                  <div className="flex items-center justify-between">
-                    <span className="font-bold text-slate-700">{alt.name}</span>
-                    <span className="text-emerald-400 font-semibold">{alt.availableSeats} Seats Open</span>
+              {matchingAlternativeProviders.length ? matchingAlternativeProviders.map((alt) => {
+                const canRequest = alt.status === 'active' && alt.availableSeats > 0;
+                return <div key={alt.id} className="grid gap-3 rounded-xl border border-slate-200 bg-white p-3 text-xs sm:grid-cols-[1fr_auto] sm:items-center">
+                  <div>
+                    <div className="flex flex-wrap items-center gap-2"><span className="font-bold text-slate-800">{language === 'kn' ? alt.kannadaName : alt.name}</span><span className={`rounded-full px-2 py-1 text-[10px] font-bold ${canRequest ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-800'}`}>{canRequest ? `${alt.availableSeats} seats open` : alt.status === 'active' ? 'Full' : 'Standby'}</span></div>
+                    <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-slate-600"><span>Vehicle: {alt.vehicleNumber}</span><span>Fare: {alt.farePerStudent === 0 ? 'Free' : `₹${alt.farePerStudent}`}</span></div>
                   </div>
-                  <div className="mt-1 flex items-center justify-between text-slate-500 text-[11px]">
-                    <span>Plate: {alt.vehicleNumber}</span>
-                    <span>Student Fare: {alt.farePerStudent === 0 ? 'FREE (Panchayat Subsidized)' : `₹${alt.farePerStudent}`}</span>
-                  </div>
-                </div>
-              ))}
+                  <button type="button" disabled={!canRequest} onClick={() => handleAlternativeRequest(alt.id)} className="min-h-[42px] rounded-lg bg-blue-700 px-3 py-2 text-xs font-semibold text-white hover:bg-blue-800 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-600">{canRequest ? 'Request this vehicle' : alt.status === 'active' ? 'No seats available' : 'Not in service'}</button>
+                </div>;
+              }) : <p className="rounded-lg bg-white p-3 text-sm text-slate-600">No verified alternative currently serves {villages.find((village) => village.id === selectedVillageId)?.name || 'this village'} to {institutions.find((institution) => institution.id === selectedInstitutionId)?.name || 'this institution'}. Change your travel profile to view other available corridors.</p>}
             </div>
           </div>
         </div>

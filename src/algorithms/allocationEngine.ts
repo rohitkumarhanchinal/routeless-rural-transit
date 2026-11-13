@@ -171,9 +171,27 @@ export class AllocationEngine {
     student: Student,
     buses: Bus[],
     alternativeProviders: AlternativeProvider[],
-    villages: Village[]
+    villages: Village[],
+    preferredAlternativeId?: string
   ): AllocationDecision {
     const studentVillage = villages.find((v) => v.id === student.villageId);
+
+    // Honor a student's explicit alternative-vehicle choice only when it is verified,
+    // active, compatible with both endpoints, and has an available seat.
+    const preferredAlternative = preferredAlternativeId && alternativeProviders.find((alt) =>
+      alt.id === preferredAlternativeId && alt.status === 'active' && alt.isVerified && alt.availableSeats > 0 &&
+      alt.operatingVillages.includes(student.villageId) && alt.destinationInstitutions.includes(student.institutionId)
+    );
+    if (preferredAlternative) {
+      const priorityScore = this.calculatePriorityScore(student, studentVillage);
+      return {
+        status: 'confirmed',
+        assignedAlternative: preferredAlternative,
+        score: 75 + priorityScore * 0.2,
+        reason: `Student-selected verified alternative: ${preferredAlternative.name} (${preferredAlternative.vehicleNumber}). Route and seat availability confirmed. Fare: ₹${preferredAlternative.farePerStudent}.`,
+        scoreBreakdown: { routeMatch: 30, timeMatch: 20, capacityScore: 15, priorityBonus: priorityScore, total: Math.round(65 + priorityScore) },
+      };
+    }
 
     // Step 1: Evaluate all government and public scheduled buses
     const candidates = buses

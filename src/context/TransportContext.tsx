@@ -70,6 +70,7 @@ interface TransportContextType {
     priorityTier: StudentPriorityTier;
     hasBoardExamToday: boolean;
     examinationStartTime?: string;
+    preferredAlternativeId?: string;
   }) => AllocationDecision;
 
   simulateBusBreakdown: (busId: string) => void;
@@ -232,6 +233,7 @@ export const TransportProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     priorityTier: StudentPriorityTier;
     hasBoardExamToday: boolean;
     examinationStartTime?: string;
+    preferredAlternativeId?: string;
   }): AllocationDecision => {
     const student = students.find((s) => s.id === params.studentId) || activeStudent;
     const village = villages.find((v) => v.id === params.villageId);
@@ -257,7 +259,7 @@ export const TransportProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     const availableAlternatives = alternatives.map((alternative) => alternative.id === student.assignedAlternativeId
       ? { ...alternative, availableSeats: Math.min(alternative.totalCapacity, alternative.availableSeats + 1) }
       : { ...alternative });
-    const decision = AllocationEngine.allocateStudent(updatedStudent, availableBuses, availableAlternatives, villages);
+    const decision = AllocationEngine.allocateStudent(updatedStudent, availableBuses, availableAlternatives, villages, params.preferredAlternativeId);
     let nextBuses = availableBuses;
     let nextAlternatives = availableAlternatives;
 
