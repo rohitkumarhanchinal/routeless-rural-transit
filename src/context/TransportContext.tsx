@@ -27,6 +27,7 @@ import {
 import { AllocationEngine, AllocationDecision } from '../algorithms/allocationEngine';
 import { DisruptionEngine, DisruptionSimulationResult } from '../algorithms/disruptionEngine';
 import { EmergencyOptimizer } from '../algorithms/emergencyOptimizer';
+import { authenticateDemo, AuthenticatedDemoAccount, DEMO_ACCOUNTS } from '../auth/demoAuth';
 import { en } from '../locales/en';
 import { kn } from '../locales/kn';
 
@@ -36,6 +37,10 @@ interface TransportContextType {
   t: typeof en;
   activeRole: string;
   setActiveRole: (role: string) => void;
+  demoAccount: AuthenticatedDemoAccount | null;
+  loginDemo: (email: string, password: string) => boolean;
+  logoutDemo: () => void;
+  completeStudentSetup: () => void;
   activeStudentId: string;
   setActiveStudentId: (id: string) => void;
   activeStudent: Student;
@@ -64,6 +69,7 @@ interface TransportContextType {
     travelDate: string;
     priorityTier: StudentPriorityTier;
     hasBoardExamToday: boolean;
+    examinationStartTime?: string;
   }) => AllocationDecision;
 
   simulateBusBreakdown: (busId: string) => void;
@@ -81,10 +87,33 @@ interface TransportContextType {
 const TransportContext = createContext<TransportContextType | undefined>(undefined);
 
 const LOCAL_STORAGE_KEY = 'routeless_transport_state_v1';
+const SESSION_STORAGE_KEY = 'routeless_demo_session_v1';
+const STUDENT_SETUP_KEY = 'routeless_student_setup_v1';
+
+const readSavedDemoAccount = (): AuthenticatedDemoAccount | null => {
+  try {
+    const account = localStorage.getItem(SESSION_STORAGE_KEY);
+    if (!account) return null;
+    const parsed = JSON.parse(account) as AuthenticatedDemoAccount;
+    const known = DEMO_ACCOUNTS.find((candidate) => candidate.id === parsed.id && candidate.role === parsed.role);
+    return known ? { id: known.id, email: known.email, role: known.role, displayName: known.displayName } : null;
+  } catch {
+    return null;
+  }
+};
+
+const savedAccount = readSavedDemoAccount();
+const hasCompletedStudentSetup = () => {
+  try { return localStorage.getItem(STUDENT_SETUP_KEY) === 'true'; } catch { return false; }
+};
+const initialRole = savedAccount?.role === 'operator' ? 'operator' : savedAccount?.role === 'student'
+  ? hasCompletedStudentSetup() ? 'student' : 'student_setup'
+  : 'login';
 
 export const TransportProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [language, setLanguage] = useState<Language>('en');
-  const [activeRole, setActiveRole] = useState<string>('student');
+  const [activeRole, setActiveRole] = useState<string>(initialRole);
+  const [demoAccount, setDemoAccount] = useState<AuthenticatedDemoAccount | null>(savedAccount);
   const [activeStudentId, setActiveStudentId] = useState<string>('std_01');
   const [isRuralLite, setIsRuralLite] = useState<boolean>(false);
   const [latestImpactReport, setLatestImpactReport] = useState<DisruptionSimulationResult['impactReport'] | null>(null);
@@ -135,7 +164,7 @@ export const TransportProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         if (parsed.students) setStudents(parsed.students);
         if (parsed.requests) setRequests(parsed.requests);
         if (parsed.disruptions) setDisruptions(parsed.disruptions);
-        if (parsed.activeStudentId) setActiveStudentId(parsed.activeStudentId);
+        if (parsed.activeStudentId && savedAccount?.role !== 'student') setActiveStudentId(parsed.activeStudentId);
         if (parsed.emergencyReport) { setEmergencyReport(parsed.emergencyReport); emergencyLock.current = true; }
       }
     } catch (e) {
@@ -167,6 +196,31 @@ export const TransportProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const activeStudent = students.find((s) => s.id === activeStudentId) || students[0];
   const t = language === 'kn' ? kn : en;
 
+  const loginDemo = (email: string, password: string) => {
+    const account = authenticateDemo(email, password);
+    if (!account) return false;
+    try { localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(account)); } catch { /* Keep the current in-memory demo session. */ }
+    setDemoAccount(account);
+    if (account.role === 'student') {
+      setActiveStudentId('std_01');
+      setActiveRole(hasCompletedStudentSetup() ? 'student' : 'student_setup');
+    } else {
+      setActiveRole('operator');
+    }
+    return true;
+  };
+
+  const logoutDemo = () => {
+    try { localStorage.removeItem(SESSION_STORAGE_KEY); } catch { /* Sign out in memory even if storage is unavailable. */ }
+    setDemoAccount(null);
+    setActiveRole('login');
+  };
+
+  const completeStudentSetup = () => {
+    try { localStorage.setItem(STUDENT_SETUP_KEY, 'true'); } catch { /* Keep setup completion for this session. */ }
+    setActiveRole('student');
+  };
+
   // 1. Submit Ride Request
   const submitRideRequest = (params: {
     studentId: string;
@@ -177,6 +231,7 @@ export const TransportProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     travelDate: string;
     priorityTier: StudentPriorityTier;
     hasBoardExamToday: boolean;
+    examinationStartTime?: string;
   }): AllocationDecision => {
     const student = students.find((s) => s.id === params.studentId) || activeStudent;
     const village = villages.find((v) => v.id === params.villageId);
@@ -189,33 +244,40 @@ export const TransportProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       requiredArrivalTime: params.arrivalTime,
       priorityTier: params.priorityTier,
       hasBoardExamToday: params.hasBoardExamToday,
+      examinationStatus: params.hasBoardExamToday ? 'scheduled' : 'none',
+      examinationStartTime: params.hasBoardExamToday ? params.examinationStartTime || student.examinationStartTime : undefined,
       travelDate: params.travelDate,
+      assignedBusId: undefined,
+      assignedAlternativeId: undefined,
     };
 
-    const decision = AllocationEngine.allocateStudent(updatedStudent, buses, alternatives, villages);
+    const availableBuses = buses.map((bus) => bus.id === student.assignedBusId
+      ? { ...bus, occupiedSeats: Math.max(0, bus.occupiedSeats - 1) }
+      : { ...bus });
+    const availableAlternatives = alternatives.map((alternative) => alternative.id === student.assignedAlternativeId
+      ? { ...alternative, availableSeats: Math.min(alternative.totalCapacity, alternative.availableSeats + 1) }
+      : { ...alternative });
+    const decision = AllocationEngine.allocateStudent(updatedStudent, availableBuses, availableAlternatives, villages);
+    let nextBuses = availableBuses;
+    let nextAlternatives = availableAlternatives;
 
     // Update Bus or Alternative seat counts
     if (decision.status === 'confirmed') {
       if (decision.assignedBus) {
-        setBuses((prev) =>
-          prev.map((b) =>
-            b.id === decision.assignedBus!.id ? { ...b, occupiedSeats: b.occupiedSeats + 1 } : b
-          )
-        );
+        nextBuses = availableBuses.map((bus) => bus.id === decision.assignedBus!.id ? { ...bus, occupiedSeats: bus.occupiedSeats + 1 } : bus);
         updatedStudent.assignedBusId = decision.assignedBus.id;
         updatedStudent.status = 'confirmed';
       } else if (decision.assignedAlternative) {
-        setAlternatives((prev) =>
-          prev.map((a) =>
-            a.id === decision.assignedAlternative!.id ? { ...a, availableSeats: a.availableSeats - 1 } : a
-          )
-        );
+        nextAlternatives = availableAlternatives.map((alternative) => alternative.id === decision.assignedAlternative!.id ? { ...alternative, availableSeats: alternative.availableSeats - 1 } : alternative);
         updatedStudent.assignedAlternativeId = decision.assignedAlternative.id;
         updatedStudent.status = 'confirmed';
       }
     } else {
       updatedStudent.status = 'waitlisted';
     }
+
+    setBuses(nextBuses);
+    setAlternatives(nextAlternatives);
 
     // Save student update
     setStudents((prev) => prev.map((s) => (s.id === student.id ? updatedStudent : s)));
@@ -444,6 +506,10 @@ export const TransportProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         t,
         activeRole,
         setActiveRole,
+        demoAccount,
+        loginDemo,
+        logoutDemo,
+        completeStudentSetup,
         activeStudentId,
         setActiveStudentId,
         activeStudent,

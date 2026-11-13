@@ -1,5 +1,5 @@
-import React from 'react';
-import { AlertTriangle, ArrowRight, BarChart3, Bus, MapPin, Users } from 'lucide-react';
+import React, { useState } from 'react';
+import { AlertTriangle, ArrowRight, BarChart3, Bus, CalendarDays, GraduationCap, LogIn, MapPin, ShieldCheck, Users } from 'lucide-react';
 import { TransportProvider, useTransport } from './context/TransportContext';
 import { Navbar } from './components/Navbar';
 import { StudentDashboard } from './components/StudentPortal/StudentDashboard';
@@ -8,7 +8,7 @@ import { RouteVisualizer } from './components/RouteVisualizer/RouteVisualizer';
 import { DisruptionSimulator } from './components/DisruptionSimulator/DisruptionSimulator';
 import { DemandAnalytics } from './components/Analytics/DemandAnalytics';
 import { MobilityAssistant } from './components/AIAssistant/MobilityAssistant';
-import { LandingPage } from './components/LandingPage/LandingPage';
+import { DEMO_ACCOUNTS } from './auth/demoAuth';
 
 const Overview: React.FC = () => {
   const { buses, students, requests, roads, alternatives, disruptions, villages, setActiveRole } = useTransport();
@@ -40,11 +40,65 @@ const Overview: React.FC = () => {
   </div>;
 };
 
+const LoginPage: React.FC = () => {
+  const { loginDemo } = useTransport();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const onSubmit = (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!loginDemo(email, password)) setError('Email and password do not match either demo account.');
+    else setError('');
+  };
+  return <main className="auth-page"><div className="auth-layout"><section className="auth-intro"><span className="brand-mark"><Bus size={22}/></span><p className="eyebrow">ROUTELESS · THE LAST MILE</p><h1>Rural journeys,<br/>better connected.</h1><p>Plan your student trip or coordinate the transport network from one place.</p><div className="auth-promise"><ShieldCheck size={17}/><span>Demo workspace · Sample data stays in this browser</span></div></section><section className="auth-card" aria-labelledby="login-title"><div className="auth-card-heading"><span className="auth-icon"><LogIn size={19}/></span><div><h2 id="login-title">Sign in</h2><p>Choose one of the two demo accounts.</p></div></div><form onSubmit={onSubmit} className="auth-form"><div><label htmlFor="login-email">Email</label><input id="login-email" type="email" autoComplete="username" value={email} onChange={(event) => setEmail(event.target.value)} required/></div><div><label htmlFor="login-password">Password</label><input id="login-password" type="password" autoComplete="current-password" value={password} onChange={(event) => setPassword(event.target.value)} required/></div>{error && <p className="auth-error" role="alert">{error}</p>}<button className="button button-primary auth-submit" type="submit">Sign in <ArrowRight size={16}/></button></form><div className="demo-login-list"><p className="demo-login-heading">Demo accounts</p>{DEMO_ACCOUNTS.map((account) => <button className="demo-login" type="button" key={account.id} onClick={() => { setEmail(account.email); setPassword(account.password); setError(''); }}><span className="demo-role-icon">{account.role === 'student' ? <GraduationCap size={17}/> : <Bus size={17}/>}</span><span className="demo-role-copy"><strong>{account.displayName}</strong><small>{account.email}</small></span><span className="demo-use">Use</span></button>)}</div><p className="auth-disclaimer">This login is for the local demo only. It is not connected to a secure authentication service.</p></section></div></main>;
+};
+
+const toTimeInput = (value: string) => {
+  const match = value.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+  if (!match) return '08:45';
+  let hour = Number(match[1]) % 12;
+  if (match[3].toUpperCase() === 'PM') hour += 12;
+  return `${String(hour).padStart(2, '0')}:${match[2]}`;
+};
+
+const toDisplayTime = (value: string) => {
+  const [rawHour, rawMinute] = value.split(':').map(Number);
+  const suffix = rawHour >= 12 ? 'PM' : 'AM';
+  const hour = rawHour % 12 || 12;
+  return `${String(hour).padStart(2, '0')}:${String(rawMinute).padStart(2, '0')} ${suffix}`;
+};
+
+const StudentSetup: React.FC = () => {
+  const { activeStudent, villages, institutions, language, submitRideRequest, completeStudentSetup, logoutDemo } = useTransport();
+  const [villageId, setVillageId] = useState(activeStudent.villageId);
+  const [institutionId, setInstitutionId] = useState(activeStudent.institutionId);
+  const [travelDate, setTravelDate] = useState(activeStudent.travelDate || '2026-11-13');
+  const [departureTime, setDepartureTime] = useState(toTimeInput('07:30 AM'));
+  const [arrivalTime, setArrivalTime] = useState(toTimeInput(activeStudent.requiredArrivalTime));
+  const [hasExam, setHasExam] = useState(activeStudent.hasBoardExamToday);
+  const [examTime, setExamTime] = useState(toTimeInput(activeStudent.examinationStartTime || '09:00 AM'));
+  const [error, setError] = useState('');
+  const onSubmit = (event: React.FormEvent) => {
+    event.preventDefault();
+    try {
+      submitRideRequest({ studentId: activeStudent.id, villageId, institutionId, travelDate, departureTime: toDisplayTime(departureTime), arrivalTime: toDisplayTime(arrivalTime), priorityTier: hasExam ? 'high_exam' : activeStudent.gender === 'female' ? 'medical_girl_safety' : 'standard', hasBoardExamToday: hasExam, examinationStartTime: hasExam ? toDisplayTime(examTime) : undefined });
+      completeStudentSetup();
+    } catch {
+      setError('We could not save this trip. Please check your selections and try again.');
+    }
+  };
+  return <main className="auth-page setup-page"><div className="setup-card"><header className="setup-header"><a className="brand" href="#setup"><span className="brand-mark"><Bus size={20}/></span><span><strong>ROUTELESS</strong><small>Student travel setup</small></span></a><button type="button" className="icon-button" onClick={logoutDemo}>Sign out</button></header><div className="setup-intro"><span className="auth-icon"><MapPin size={20}/></span><div><p className="eyebrow">WELCOME, {activeStudent.name.toUpperCase()}</p><h1>Where are you travelling from?</h1><p>Set your pickup village, destination, and travel times to request a compatible seat.</p></div></div><form className="setup-form" onSubmit={onSubmit}><div className="setup-field-grid"><div><label htmlFor="setup-village">Pickup village</label><select id="setup-village" value={villageId} onChange={(event) => setVillageId(event.target.value)} required>{villages.map((village) => <option key={village.id} value={village.id}>{language === 'kn' ? village.kannadaName : village.name}</option>)}</select></div><div><label htmlFor="setup-institution">Institution</label><select id="setup-institution" value={institutionId} onChange={(event) => setInstitutionId(event.target.value)} required>{institutions.map((institution) => <option key={institution.id} value={institution.id}>{language === 'kn' ? institution.kannadaName : institution.name}</option>)}</select></div><div><label htmlFor="setup-date">Travel date</label><span className="input-with-icon"><CalendarDays size={16}/><input id="setup-date" type="date" value={travelDate} onChange={(event) => setTravelDate(event.target.value)} required/></span></div><div><label htmlFor="setup-departure">Preferred departure</label><input id="setup-departure" type="time" value={departureTime} onChange={(event) => setDepartureTime(event.target.value)} required/></div><div><label htmlFor="setup-arrival">Required arrival time</label><input id="setup-arrival" type="time" value={arrivalTime} onChange={(event) => setArrivalTime(event.target.value)} required/></div></div><label className="exam-toggle"><input type="checkbox" checked={hasExam} onChange={(event) => setHasExam(event.target.checked)}/><span><strong>I have an examination today</strong><small>We’ll use the exam start time to prioritize and check whether a route can get you there in time.</small></span></label>{hasExam && <div className="exam-time-field"><label htmlFor="setup-exam-time">Examination start time</label><input id="setup-exam-time" type="time" value={examTime} onChange={(event) => setExamTime(event.target.value)} required/></div>}{error && <p className="auth-error" role="alert">{error}</p>}<div className="setup-actions"><p>Your seat request will use current demo bus capacity and route data.</p><button type="submit" className="button button-primary">Check transport options <ArrowRight size={16}/></button></div></form></div></main>;
+};
+
 const AppContent: React.FC = () => {
-  const { activeRole, setActiveRole, t } = useTransport();
+  const { activeRole, setActiveRole, t, demoAccount } = useTransport();
+  if (!demoAccount) return <LoginPage/>;
+  if (activeRole === 'student_setup') return <StudentSetup/>;
+  const role = demoAccount.role === 'student' && ['operator', 'overview', 'simulator', 'analytics'].includes(activeRole)
+    ? 'student'
+    : activeRole;
   return <div className="app-shell"><a className="skip-link" href="#main-content">Skip to main content</a><Navbar/><main id="main-content" className="main-content" tabIndex={-1}>
-    {activeRole === 'landing' && <LandingPage onExplore={setActiveRole}/>}
-    {activeRole === 'overview' && <Overview/>}{activeRole === 'student' && <StudentDashboard/>}{activeRole === 'operator' && <OperatorDashboard/>}{activeRole === 'routes' && <RouteVisualizer/>}{activeRole === 'simulator' && <DisruptionSimulator/>}{activeRole === 'analytics' && <DemandAnalytics/>}{activeRole === 'assistant' && <MobilityAssistant/>}
+    {role === 'overview' && <Overview/>}{role === 'student' && <StudentDashboard/>}{role === 'operator' && demoAccount.role === 'operator' && <OperatorDashboard/>}{role === 'routes' && <RouteVisualizer/>}{role === 'simulator' && demoAccount.role === 'operator' && <DisruptionSimulator/>}{role === 'analytics' && demoAccount.role === 'operator' && <DemandAnalytics/>}{role === 'assistant' && <MobilityAssistant/>}
     </main><footer className="app-footer"><strong>{t.app_name} · The Last Mile</strong><span>Rural mobility tools for students and transport teams</span></footer></div>;
 };
 

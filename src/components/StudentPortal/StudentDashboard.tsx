@@ -23,9 +23,7 @@ export const StudentDashboard: React.FC = () => {
   const {
     t,
     language,
-    students,
     activeStudent,
-    setActiveStudentId,
     villages,
     institutions,
     buses,
@@ -47,19 +45,6 @@ export const StudentDashboard: React.FC = () => {
   const [hasExam, setHasExam] = useState<boolean>(activeStudent.hasBoardExamToday);
   const [priorityTier, setPriorityTier] = useState<StudentPriorityTier>(activeStudent.priorityTier);
   const [requestSubmittedSuccess, setRequestSubmittedSuccess] = useState<string | null>(null);
-
-  // Sync state when activeStudent changes
-  const handleSelectStudent = (id: string) => {
-    setActiveStudentId(id);
-    const target = students.find((s) => s.id === id);
-    if (target) {
-      setSelectedVillageId(target.villageId);
-      setSelectedInstitutionId(target.institutionId);
-      setHasExam(target.hasBoardExamToday);
-      setPriorityTier(target.priorityTier);
-      setRequestSubmittedSuccess(null);
-    }
-  };
 
   const studentVillage = villages.find((v) => v.id === activeStudent.villageId);
   const studentInstitution = institutions.find((i) => i.id === activeStudent.institutionId);
@@ -102,9 +87,9 @@ export const StudentDashboard: React.FC = () => {
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto px-4 py-6">
-      {/* Top Banner: Demo Student Profile Selector */}
+      {/* Current signed-in student profile */}
       <div className="bg-slate-50/90 border border-slate-200/80 rounded-2xl p-4 sm:p-5 shadow-lg backdrop-blur">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="flex items-center gap-4">
           <div className="flex items-center space-x-3.5">
             <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-brand-600 to-indigo-600 flex items-center justify-center text-slate-900 font-bold text-lg shadow-md">
               {activeStudent.name.charAt(0)}
@@ -129,21 +114,6 @@ export const StudentDashboard: React.FC = () => {
             </div>
           </div>
 
-          {/* Quick Demo Student Switcher */}
-          <div className="flex items-center space-x-2">
-            <label className="text-xs text-slate-500 font-medium whitespace-nowrap">{t.switch_student}:</label>
-            <select
-              value={activeStudent.id}
-              onChange={(e) => handleSelectStudent(e.target.value)}
-              className="bg-white border border-slate-200 rounded-lg text-xs font-semibold px-3 py-2 text-slate-700 focus:outline-none focus:border-brand-500"
-            >
-              {students.map((s, index) => (
-                <option key={s.id} value={s.id}>
-                  {s.demandSource === 'simulated' ? `Simulated request ${index + 1}` : `Demo profile ${index + 1}`}
-                </option>
-              ))}
-            </select>
-          </div>
         </div>
       </div>
 
